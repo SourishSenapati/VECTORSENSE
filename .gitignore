@@ -1,0 +1,28 @@
+# Virtual Environments
+vectorsense_env/
+vectorsense_pinn_env/
+bin/
+include/
+lib/
+share/
+pyvenv.cfg
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ROS 2
+install/
+build/
+log/
+
+# Weights & Large Files (Keep only specific verified ones)
+# *.pt
+# *.onnx
+# *.trt
+
+# OS
+.DS_Store
+Thumbs.db
