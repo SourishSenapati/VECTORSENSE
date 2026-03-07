@@ -10,7 +10,11 @@ from vectorsense_pinn import VectorSensePINN, apply_vram_clamp
 VectorSense Heavy-Iron Base Station Executive.
 Binds a ZeroMQ ROUTER socket to handle high-concurrency emergency offloads 
 from edge nodes. Executes unconstrained CFD/PINN models on an RTX GPU.
+Integrates SINDy-Docking, APF-Swarm coordination, and OPC-UA Gateways.
 """
+
+from swarm_coordinator_cuda import SwarmCoordinator
+from vectorsense_auditor import IndustrialAuditor
 
 def start_base_station(port=5555):
     # Hardware Configuration
@@ -31,7 +35,16 @@ def start_base_station(port=5555):
     socket = context.socket(zmq.ROUTER)
     socket.bind(f"tcp://*:{port}")
     
+    # ZMQ PUB Socket for Industrial OPC-UA Gateway (Port 5556)
+    pub_socket = context.socket(zmq.PUB)
+    pub_socket.bind("tcp://*:5556")
+    
+    # Initialize Swarm Coordination and Auditing
+    coordinator = SwarmCoordinator()
+    auditor = IndustrialAuditor()
+    
     print(f"[NET] Base Station ROUTER Bound to Port {port}")
+    print(f"[NET] Telemetry PUB Bound to Port 5556")
     print("[INIT] Monitoring Industrial Swarm for 6-Sigma Fallback signals...")
 
     while True:
@@ -52,18 +65,31 @@ def start_base_station(port=5555):
                 # Simulate deep analytical path
                 time.sleep(0.005) # Simulated complex CFD overhead
                 
-            resolution = {
-                "diagnostic_command": "STABILIZE_THERMAL_VENT_NORMAL_PARAMETER_CONFIRMED",
-                "confidence": 0.9998,
-                "timestamp_base": time.perf_counter_ns()
+            # 1. Swarm APF Force Calculation (KPI-2: < 2ms)
+            drone_pos = np.array([state.get("pos", [0,0,0])]) # Single drone fallback
+            leak_source = np.array([[5.0, 5.0, 5.5]]) # Hypothetical target
+            net_vectors, apf_latency = coordinator.calculate_swarm_vectors(drone_pos, leak_source)
+            
+            # 2. Cryptographic Logging (Audit Trail)
+            auditor.log_telemetry(state)
+            
+            # 3. Broadcast to Industrial OPC-UA Gateway
+            telemetry_packet = {
+                "drone_id": identity.decode(),
+                "x": float(drone_pos[0,0]),
+                "y": float(drone_pos[0,1]),
+                "c": float(state.get("concentration", 0.0)),
+                "status": 1
             }
+            pub_socket.send(lz4.frame.compress(msgpack.packb(telemetry_packet)))
             
             # Route response back to specific edge identity
+            resolution["swarm_offset"] = net_vectors[0].tolist()
             response_binary = lz4.frame.compress(msgpack.packb(resolution, use_bin_type=True))
             socket.send_multipart([identity, response_binary])
             
             total_processing_us = (time.perf_counter_ns() - ts_origin) / 1000.0
-            print(f"[OFFLOAD] Identity: {identity.decode()} | Ingestion-to-Resolution: {total_processing_us:.2f} us")
+            print(f"[OFFLOAD] Identity: {identity.decode()} | APF: {apf_latency:.2f}ms | Total: {total_processing_us:.2f} us")
             
         except KeyboardInterrupt:
             print("\n[FIN] Base Station Shutdown.")
