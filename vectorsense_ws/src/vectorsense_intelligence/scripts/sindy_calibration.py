@@ -1,71 +1,68 @@
 import pysindy as ps
 import numpy as np
-import time
+import pandas as pd
+import os
+import sys
 
-def generate_noise_sensor_data(n_samples=2000):
-    t = np.linspace(0, 50, n_samples)
-    dt = t[1] - t[0]
-    
-    # Exogenous features: Temp (T), Humidity (H)
-    # T drifts linearly with some oscillation (e.g. daily cycle)
-    # H drifts with noise
-    T = 25 + 5 * np.sin(0.1 * t) + 0.1 * t
-    H = 40 + 10 * np.cos(0.05 * t) - 0.05 * t
-    
-    # Drift Error E
-    # Target Equation:    # E_dot = 0.04*T^2 - 1.2*H
-    E = np.zeros(n_samples)
-    for i in range(1, n_samples):
-        # High drift for discovery
-        E_dot = 0.04 * (T[i-1]**2) - 1.2 * H[i-1]
-        E[i] = E[i-1] + E_dot * dt
+"""
+VectorSense SINDy Calibration Executive.
+Utilizes Sparse Identification of Nonlinear Dynamics to discover the 
+governing equations of sensor drift using empirical UCI datasets.
+"""
 
-    # MQ Sensor Voltage V = True_Signal + E + noise
-    # For now, let's assume True_Signal is a pulse
-    true_v = 1.0 * (np.sin(t) > 0.5) 
-    V = true_v + E + np.random.normal(0, 0.1, n_samples)
+def generate_synthetic_drift_data(n_samples=5000):
+    """
+    Generate synthetic industrial drift data to mimic UCI Gas Sensor Array 
+    if the local filesystem lacks the raw CSV.
+    """
+    t = np.linspace(0, 100, n_samples)
+    T = 25 + 5 * np.sin(t / 10)  # Temperature oscillation
+    H = 50 + 10 * np.cos(t / 5)   # Humidity oscillation
     
-    # Input for SINDy: We want to discover the relationship between E_dot and (V, T, H)
-    # We estimate E_dot from V if we know the baseline? No, usually we look at E directly in training
-    # SINDy features: [E, T, H] -> discover E_dot
-    X = np.stack([E, T, H], axis=-1)
-    return t, X
+    # Non-linear drift model: Offset + T dependence + T^2 + noise
+    drift = -0.5 + 0.04*T - 0.01*H + 0.002*(T**2) + np.random.normal(0, 0.01, n_samples)
+    
+    return np.stack([t, T, H], axis=1), drift.reshape(-1, 1)
 
-def calibrate_sensors():
-    print("PHASE 2: SINDy Calibration Engine Starting...")
-    t, sensor_data = generate_noise_sensor_data()
+def run_sindy_calibration(data_csv=None):
+    print("[INIT] Starting SINDy Sparse Discovery Engine.")
     
-    # Directive 2.2: The Drift Equation (Sparse Identification)
-    # Feature names: [E, T, H]
-    feature_names = ["E", "T", "H"]
+    if data_csv and os.path.exists(data_csv):
+        # Industrial Data Ingestion
+        df = pd.read_csv(data_csv)
+        X = df[['time', 'temp', 'humidity']].values
+        y = df['voltage_drift'].values.reshape(-1, 1)
+    else:
+        print("[WARN] Industrial dataset not found. Utilizing Synthetic Emulation Bank.")
+        X, y = generate_synthetic_drift_data()
+
+    # 1. Define the Feature Library (3rd Degree Polynomial)
+    # Allows for T^3, H^3, T*H, T^2*H interactions
+    poly_library = ps.PolynomialLibrary(degree=3)
     
-    # Use higher degree library to ensure discovery of T^2
-    library = ps.PolynomialLibrary(degree=2)
+    # 2. Define the Optimizer (Sequentially Thresholded Least Squares)
+    # Aggressively strips away noise with a 0.1 sparsity threshold
+    optimizer = ps.STLSQ(threshold=0.1)
     
-    # Lower threshold for STLSQ if output was zero
-    optimizer = ps.STLSQ(threshold=0.001) 
+    # 3. Model Initialization
+    model = ps.SINDy(
+        feature_library=poly_library,
+        optimizer=optimizer,
+        feature_names=["t", "T", "H"]
+    )
     
-    model = ps.SINDy(feature_library=library, optimizer=optimizer)
+    # 4. Global Fit Execution
+    model.fit(X, y, quiet=True)
     
-    dt = t[1] - t[0]
-    model.fit(sensor_data, t=dt)
-    
-    print("\n--- DISCOVERED DRIFT PHYSICS (SINDy Output) ---")
+    # 5. Result Extraction
+    print("\n[DISCOVERED] Governing Drift Equation:")
     model.print()
     
-    # Discover E_dot specifically
-    # KPI 2: Output a sparse algebraic equation
-    # The output will look like "E' = ... "
+    # Coefficients for the brain_node.py rectification layer
+    coeffs = model.coefficients()
+    print(f"\n[READY] Extracted {len(coeffs[coeffs != 0])} sparse physical constants.")
     
-    # Store equation as string for hardcoding in inference loop (Directive 2.2 requirement)
-    # Extracting the equation from the model results
-    discovered_eqn = f"E_dot = {model.equations()[0]}"
-    print(f"\nDiscovered Equation for Sensor Drift Eradication: {discovered_eqn}")
-    
-    # Save the model or coefficients
-    # In a real scenario, we'd save coefficients for the Brain Node
-    print("SINDy Calibration COMPLETE.")
-    return discovered_eqn
+    return model
 
 if __name__ == "__main__":
-    calibrate_sensors()
+    run_sindy_calibration()
