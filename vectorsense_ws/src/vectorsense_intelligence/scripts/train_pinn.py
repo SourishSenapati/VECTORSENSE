@@ -7,56 +7,51 @@ import os
 import signal
 from vectorsense_pinn import VectorSensePINN, apply_vram_clamp
 
-# Global model pointer for interrupt saving
-master_model = None
+# Model pointer for interrupt saving
+model_pointer = None
 
 def save_model(signal_received=None, frame=None):
     """Save weights on Ctrl+C or Interrupt"""
-    if master_model:
-        print("\n[!] INTERRUPT DETECTED. Saving current progress...")
-        torch.save(master_model.state_dict(), "vectorsense_pinn_checkpoint.pt")
-        print("Progress secured in vectorsense_pinn_checkpoint.pt")
+    if model_pointer:
+        print("\n[!] Interrupt detected. Saving current state...")
+        torch.save(model_pointer.state_dict(), "vectorsense_pinn_checkpoint.pt")
+        print("Progress saved in vectorsense_pinn_checkpoint.pt")
         if signal_received:
             exit(0)
 
 def train_pinn():
-    global master_model
+    global model_pointer
     
-    # Directive 1.1: CUDA Verification
     if not torch.cuda.is_available():
-        print("CRITICAL: CUDA NOT DETECTED. Edge hardware emulation failed.")
+        print("CRITICAL: CUDA not detected.")
         return
         
-    print(f"DEVICE: {torch.cuda.get_device_name(0)}")
-    print(f"CUDA CAPABILITY: {torch.cuda.get_device_capability(0)}")
+    print(f"Device: {torch.cuda.get_device_name(0)}")
     
-    # Directive 1.2: VRAM Clamp
     apply_vram_clamp(0.58)
     
     device = torch.device("cuda")
     pinn_model = VectorSensePINN().to(device)
-    master_model = pinn_model
+    model_pointer = pinn_model
     
     # Register Interrupt handler
     signal.signal(signal.SIGINT, save_model)
     
-    # Directive 3.1: Mixed Precision
+    # Mixed Precision Configuration
     scaler = GradScaler()
-    optimizer = optim.Adam(pinn_model.parameters(), lr=1e-4) # Lower LR for precision
+    optimizer = optim.Adam(pinn_model.parameters(), lr=1e-4) 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=50)
     
-    # Data Volume for 99.999% Accuracy
     n_points = 250000 
-    batch_size = 8192 # Precision over raw speed for sub-18ms convergence
+    batch_size = 8192 
     
-    # Synthesize physical coordinate field
     x_ph = torch.rand(n_points, 1, device=device).requires_grad_(True)
     y_ph = torch.rand(n_points, 1, device=device).requires_grad_(True)
     t_ph = torch.rand(n_points, 1, device=device).requires_grad_(True)
     
     print("\n" + "="*50)
-    print("   PHASE 3: THE FURNACE - PINN NS-FP16 TRAINING")
-    print("   TARGET: <1e-4 Loss | 99.999% Reliability")
+    print("   PINN Navier-Stokes Training")
+    print("   Target Loss: <1e-6")
     print("="*50 + "\n")
     
     start_time = time.perf_counter()
