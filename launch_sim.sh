@@ -1,6 +1,6 @@
 #!/bin/bash
-# High-Fidelity Industrial Simulation Launch Script (MASTER)
-# GZ Sim Harmonic + Refinery + Sovereign URDF + APF Controller
+# High-Fidelity Intelligence Simulation Launch Script (MASTER)
+# GZ Sim Harmonic + Refinery + Sovereign URDF + APF Controller + Cyber-Physical Truth Engine
 
 # Clean up existing processes
 killall -9 Xvfb x11vnc websockify gz sim gz-sim-server gz-sim-gui node python3 2>/dev/null || true
@@ -22,21 +22,30 @@ echo "Loading Industrial Simulation Stack (ROS 2 Jazzy)..."
 source /opt/ros/jazzy/setup.bash
 source /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/install/setup.bash
 
-# Set up GZ Sim Plugin Path for the custom GasLeakPlugin
+# Set up GZ Sim Plugin Path
 export GZ_SIM_SYSTEM_PLUGIN_PATH=/mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/install/vectorsense_gazebo/lib/vectorsense_gazebo
 
-echo "Launching Master Full Demo..."
+echo "[DEMO] Launching Master High-Fidelity Refinery World..."
 ros2 launch vectorsense_gazebo vectorsense_full_demo.launch.py &
 sleep 20
 
-echo "Initializing APF Autonomous Flight Brain..."
-python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/apf_flight_controller.py &
+echo "[INTEL] Activating Cyber-Physical Discrepancy Engine (Truth Bridge)..."
+python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/financial_physics_bridge.py &
 sleep 2
 
-echo "Initializing Spatial Twin Data Bridge..."
-python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/spatial_twin_bridge.py &
+echo "[TRICKERY] Initializing Hacked SCADA Network Simulator..."
+python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/scada_network_sim.py &
+sleep 2
 
-echo "Full Simulation Stack is LIVE."
+echo "[PILOT] Initializing APF Autonomous Flight Brain..."
+python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/apf_flight_controller.py &
+
+echo "---------------------------------------------------------"
+echo "VectorSense Cyber-Physical Demo is LIVE."
+echo "Physical Reality: Port 5556 (Gazebo)"
+echo "Digital Network:  Port 5557 (Compromised SCADA)"
+echo "Truth Comparator: Port 8000 (WebSocket)"
+echo "---------------------------------------------------------"
 echo "Access NoVNC: http://localhost:6080/vnc.html"
 echo "Access Dashboard: http://localhost:5173/"
 

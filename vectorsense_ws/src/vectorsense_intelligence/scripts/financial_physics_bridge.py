@@ -1,67 +1,101 @@
+import asyncio
+import websockets
+import zmq
+import zmq.asyncio
 import json
 import logging
-import time
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("VectorSense.Economics")
+logger = logging.getLogger("VectorSense.TruthEngine")
 
-class FinancialPhysicsBridge:
-    """
-    Directive 2.1: Navier-Stokes to EBITDA Translation.
-    Monetizes the physics of the leak for Plant Managers.
-    """
-    def __init__(self):
-        # Industrial Constants: Mock API for real-time risk assessment
-        self.pricing = {
-            "Hydrogen": 3.00,  # USD/kg
-            "Ethylene": 1.50,  # USD/kg
-            "Benzene": 1.15   # USD/kg
-        }
-        
-        # Regulatory Fines (EPA/OSHA Baseline Risk)
-        self.epa_penalty_baseline = 25000.00 # Flat fee per reported incident
-        self.hourly_risk_rate = 1000.00      # Fines grow with sustained leakage
-        
-        # LEL: Lower Explosive Limit Thresholds
-        self.lel_safety_limit = 0.04 # 4% Concentration volume
+# ZeroMQ Addresses
+ZMQ_REAL_PHYSICS = "tcp://127.0.0.1:5556" # Ground Truth from Gazebo
+ZMQ_SCADA_NET    = "tcp://127.0.0.1:5557" # Compromised Digital reporting
 
-    def calculate_threat_economics(self, gas_type, mass_flux, sim_time):
+class DiscrepancyEngineBridge:
+    """
+    Directive 1.1: Cyber-Physical Discrepancy Engine.
+    Detects state-sponsored sabotage by comparing physical reality (PINN) 
+    against digital reporting (SCADA).
+    """
+    def __init__(self, ws_port=8000):
+        self.ws_port = ws_port
+        self.clients = set()
+        self.ctx = zmq.asyncio.Context()
+        
+        # Sockets
+        self.sub_physics = self.ctx.socket(zmq.SUB)
+        self.sub_scada = self.ctx.socket(zmq.SUB)
+        
+        # State
+        self.last_scada = {}
+        self.last_physics = {}
+
+    async def start(self):
+        self.sub_physics.connect(ZMQ_REAL_PHYSICS)
+        self.sub_physics.setsockopt_string(zmq.SUBSCRIBE, "")
+        
+        self.sub_scada.connect(ZMQ_SCADA_NET)
+        self.sub_scada.setsockopt_string(zmq.SUBSCRIBE, "")
+        
+        logger.info(f"[TRUTH] Ingesting Reality from {ZMQ_REAL_PHYSICS}")
+        logger.info(f"[TRUTH] Ingesting Network from {ZMQ_SCADA_NET}")
+
+        async with websockets.serve(self.ws_handler, "0.0.0.0", self.ws_port):
+            await asyncio.gather(
+                self.physics_listener(),
+                self.scada_listener(),
+                self.discrepancy_loop()
+            )
+
+    async def physics_listener(self):
+        while True:
+            msg = await self.sub_physics.recv_string()
+            self.last_physics = json.loads(msg)
+
+    async def scada_listener(self):
+        while True:
+            msg = await self.sub_scada.recv_string()
+            self.last_scada = json.loads(msg)
+
+    async def discrepancy_loop(self):
         """
-        Input: 
-          mass_flux: dm/dt [kg/s] from PINN Navier-Stokes output.
-        Output:
-          Financial Loss, Risk Multiplier, and LEL countdown.
+        The Intelligence Logic: Detects mismatches between bits and atoms.
         """
-        price_per_kg = self.pricing.get(gas_type, 1.00)
-        
-        # 1. Commodity Loss
-        loss_per_sec = mass_flux * price_per_kg
-        total_commodity_loss = loss_per_sec * sim_time
-        
-        # 2. Regulatory Exposure
-        active_hours = sim_time / 3600.0
-        total_epa_risk = self.epa_penalty_baseline + (active_hours * self.hourly_risk_rate)
-        
-        # 3. LEL Countdown Simulation (Deterministic diffusion model)
-        # Time to reach LEL for a confined industrial volume (mock 500m3)
-        volume = 500.0 
-        attained_mass = mass_flux * sim_time
-        current_concentration = attained_mass / (volume * 1.2) # Simplistic density assumption
-        
-        time_to_lel = max(0, (self.lel_safety_limit - current_concentration) / (mass_flux / (volume * 1.2)))
-        
-        return {
-            "gas_type": gas_type,
-            "bleed_rate_usd": round(loss_per_sec * 3600, 2), # USD/hr for UI
-            "total_commodity_loss": round(total_commodity_loss, 2),
-            "total_regulatory_risk": round(total_epa_risk, 2),
-            "time_to_explosive_limit": round(time_to_lel / 60.0, 1), # Minutes
-            "mass_loss_rate": round(mass_flux, 4)
-        }
+        while True:
+            # Logic: If SCADA says CLOSED but Physics shows LEAK > 0
+            is_leaking = self.last_physics.get("leak", False)
+            scada_closed = self.last_scada.get("digital_status") == "CLOSED"
+            
+            discrepancy = False
+            alert_type = "NOMINAL"
+
+            if is_leaking and scada_closed:
+                discrepancy = True
+                alert_type = "SCADA_SPOOFING_DETECTED"
+                logger.warning("!!! CYBER-PHYSICAL DISCREPANCY DETECTED: Physical Leak under Hacked SCADA Status !!!")
+
+            payload = {
+                "reality": self.last_physics,
+                "network": self.last_scada,
+                "cyber_physical_discrepancy": discrepancy,
+                "alert_status": alert_type,
+                "source": "DISCREPANCY_ENGINE"
+            }
+
+            if self.clients:
+                raw_payload = json.dumps(payload)
+                await asyncio.gather(*[c.send(raw_payload) for c in self.clients])
+            
+            await asyncio.sleep(0.1)
+
+    async def ws_handler(self, websocket):
+        self.clients.add(websocket)
+        try:
+            await websocket.wait_closed()
+        finally:
+            self.clients.remove(websocket)
 
 if __name__ == "__main__":
-    # Integration Test
-    bridge = FinancialPhysicsBridge()
-    economics = bridge.calculate_threat_economics("Hydrogen", 0.0125, 600)
-    logger.info(f"[ECON] Predicted Hourly Bleed: ${economics['bleed_rate_usd']}/hr")
-    logger.info(f"[ECON] Risk Timer: {economics['time_to_explosive_limit']} mins to LEL breach.")
+    engine = DiscrepancyEngineBridge()
+    asyncio.run(engine.start())
