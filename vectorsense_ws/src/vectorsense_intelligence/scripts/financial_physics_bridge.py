@@ -1,8 +1,6 @@
 """
 Cyber-Physical Discrepancy Engine and Multi-Modal Bridge.
-Compares real-time physical data with digital SCADA telemetry to detect cyberattacks.
 """
-
 import asyncio
 import json
 import logging
@@ -10,14 +8,12 @@ import websockets
 import zmq
 import zmq.asyncio
 
-# Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("VectorSense.TruthEngine")
 
-# ZeroMQ Addresses
-ZMQ_REAL_PHYSICS = "tcp://127.0.0.1:5556"  # Ground Truth from Gazebo
-ZMQ_SCADA_NET = "tcp://127.0.0.1:5557"     # Compromised Digital reporting
-ZMQ_MISSION_CMD = "tcp://127.0.0.1:5558"   # Mission Control Command Line
+ZMQ_REAL_PHYSICS = "tcp://127.0.0.1:5556"
+ZMQ_SCADA_NET = "tcp://127.0.0.1:5557"
+ZMQ_MISSION_CMD = "tcp://127.0.0.1:5558"
 
 class DiscrepancyEngineBridge:
     """
@@ -36,7 +32,7 @@ class DiscrepancyEngineBridge:
         self.last_physics = {"mode": "GAS_TOMOGRAPHY"}
 
     async def start(self):
-        """Initializes sockets and starts the asynchronous processing loops."""
+        """Init sockets and loops."""
         self.sub_physics.connect(ZMQ_REAL_PHYSICS)
         self.sub_physics.setsockopt_string(zmq.SUBSCRIBE, "")
         self.sub_scada.connect(ZMQ_SCADA_NET)
@@ -51,19 +47,19 @@ class DiscrepancyEngineBridge:
             )
 
     async def physics_listener(self):
-        """Listens for real-time physics data from the PINN engine."""
+        """Listen for physics data."""
         while True:
             msg = await self.sub_physics.recv_string()
             self.last_physics = json.loads(msg)
 
     async def scada_listener(self):
-        """Listens for digital telemetry from the SCADA network simulator."""
+        """Listen for SCADA data."""
         while True:
             msg = await self.sub_scada.recv_string()
             self.last_scada = json.loads(msg)
 
     async def discrepancy_loop(self):
-        """Continuously compares reality vs digital reporting to flag discrepancies."""
+        """Main loop."""
         while True:
             is_leaking = self.last_physics.get("leak", False)
             scada_closed = self.last_scada.get("digital_status") == "CLOSED"
@@ -87,7 +83,7 @@ class DiscrepancyEngineBridge:
             await asyncio.sleep(0.1)
 
     async def ws_handler(self, websocket):
-        """Handles dashboard WebSocket connections and mission mode changes."""
+        """Handle missions."""
         self.clients.add(websocket)
         try:
             async for message in websocket:
