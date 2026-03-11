@@ -28,8 +28,14 @@ ament_target_dependencies(GasLeakPlugin
 )
 target_link_libraries(GasLeakPlugin ${ZMQ_LIBRARIES})
 
+# Install Gazebo Plugin
 install(TARGETS GasLeakPlugin
     DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install Launch files and Worlds
+install(DIRECTORY launch worlds
+    DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()

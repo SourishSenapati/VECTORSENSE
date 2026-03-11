@@ -1,6 +1,6 @@
 #!/bin/bash
-# High-Fidelity Infrastructure Launch Script (VectorSense)
-# GZ Sim Harmonic + Refinery + Sovereign URDF
+# High-Fidelity Industrial Simulation Launch Script (MASTER)
+# GZ Sim Harmonic + Refinery + Sovereign URDF + APF Controller
 
 # Clean up existing processes
 killall -9 Xvfb x11vnc websockify gz sim gz-sim-server gz-sim-gui node python3 2>/dev/null || true
@@ -18,19 +18,27 @@ echo "Starting websockify (NoVNC)..."
 websockify --web /usr/share/novnc 6080 localhost:5900 &
 sleep 2
 
-echo "Starting Gazebo Sim (Harmonic) with Industrial Refinery..."
-# Set up GZ Sim Plugin Path
-export GZ_SIM_SYSTEM_PLUGIN_PATH=/mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_gazebo/build
-# Start the simulation with the industrial world
-gz sim -v 4 -g /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/chemical_plant.world &
-sleep 15
+echo "Loading Industrial Simulation Stack (ROS 2 Jazzy)..."
+source /opt/ros/jazzy/setup.bash
+source /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/install/setup.bash
 
-echo "Spawning Sovereign URDF Drone..."
-# Use joint_state_publisher and robot_state_publisher for the high-fidelity URDF
-# In a real setup, we would run: 
-# ros2 launch vectorsense_description vectorsense_demo.launch.py
+# Set up GZ Sim Plugin Path for the custom GasLeakPlugin
+export GZ_SIM_SYSTEM_PLUGIN_PATH=/mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/install/vectorsense_gazebo/lib/vectorsense_gazebo
+
+echo "Launching Master Full Demo..."
+ros2 launch vectorsense_gazebo vectorsense_full_demo.launch.py &
+sleep 20
+
+echo "Initializing APF Autonomous Flight Brain..."
+python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/apf_flight_controller.py &
+sleep 2
+
+echo "Initializing Spatial Twin Data Bridge..."
 python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/spatial_twin_bridge.py &
 
-echo "Infrastructure Live. Monitoring industrial hazards."
+echo "Full Simulation Stack is LIVE."
+echo "Access NoVNC: http://localhost:6080/vnc.html"
+echo "Access Dashboard: http://localhost:5173/"
+
 # Keep script alive
 wait

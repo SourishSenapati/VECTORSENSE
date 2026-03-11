@@ -6,21 +6,21 @@ import * as THREE from 'three';
 const SpatialTwin = ({ pos }) => {
   const droneRef = useRef();
 
-  // 1. Industrial Infrastructure Mock (Pipe Rack)
+  // Directive 3.1: Industrial Infrastructure Map (Extended Pipe Rack)
   const Pipes = useMemo(() => {
     return (
       <group position={[0, 0, 0]}>
-        {/* Main Pipe Rack */}
-        <Cylinder args={[0.2, 0.2, 20]} position={[0, 5, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <meshStandardMaterial color="#333" roughness={0.1} metalness={0.8} />
+        {/* Main Pipe Rack Tunnels */}
+        <Cylinder args={[0.3, 0.3, 40]} position={[0, 8, 5]} rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial color="#222" roughness={0} metalness={1} />
         </Cylinder>
-        <Cylinder args={[0.15, 0.15, 20]} position={[0, 4.5, 0.5]} rotation={[0, 0, Math.PI / 2]}>
-          <meshStandardMaterial color="#222" roughness={0.1} metalness={0.9} />
+        <Cylinder args={[0.2, 0.2, 40]} position={[0, 7.5, 6]} rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial color="#333" roughness={0} metalness={1} />
         </Cylinder>
         
-        {/* Structural Supports */}
-        {[-8, -4, 0, 4, 8].map((x, i) => (
-          <Box key={i} args={[0.5, 5, 0.5]} position={[x, 2.5, 0]}>
+        {/* Massive Infrastructure Pillars */}
+        {[-15, -10, -5, 0, 5, 10, 15, 20].map((x, i) => (
+          <Box key={i} args={[0.8, 8, 0.8]} position={[x, 4, 5]}>
             <meshStandardMaterial color="#111" />
           </Box>
         ))}
@@ -28,17 +28,16 @@ const SpatialTwin = ({ pos }) => {
     );
   }, []);
 
-  // 2. Volumetric Plume (Navier-Stokes Visualizer)
-  // Generating static random distribution for particles
+  // Volumetric Hazard Visualizer
   const particles = useMemo(() => {
-    const count = 1000;
+    const count = 2000;
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.sin(i * 0.1) * 2.5);
-      positions[i * 3 + 1] = (Math.cos(i * 0.2) * 1.5);
-      positions[i * 3 + 2] = (Math.sin(i * 0.3) * 1.5);
-      sizes[i] = 0.05 + Math.abs(Math.sin(i)) * 0.05;
+      positions[i * 3] = (Math.random() - 0.5) * 5;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 3;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+      sizes[i] = Math.random() * 0.1;
     }
     return { positions, sizes };
   }, []);
@@ -47,98 +46,94 @@ const SpatialTwin = ({ pos }) => {
   
   useFrame((state) => {
     if (plumeRef.current) {
-      // Pulse plume concentration
       const t = state.clock.getElapsedTime();
-      plumeRef.current.rotation.y = t * 0.1;
-      plumeRef.current.position.y = 5 + Math.sin(t * 2) * 0.1;
-      plumeRef.current.scale.set(1 + Math.sin(t) * 0.05, 1, 1);
+      plumeRef.current.rotation.y = t * 0.2;
+      plumeRef.current.scale.set(1.2 + Math.sin(t) * 0.1, 1, 1.2 + Math.cos(t) * 0.1);
     }
   });
 
   return (
     <>
-      {/* Infrastructure Backdrop */}
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} intensity={1} />
+
+      {/* Industrial Backbone */}
       {Pipes}
 
-      {/* Volumetric Gas Leak (Simulated Volumetrics) */}
-      <group position={[2, 5, 0]} ref={plumeRef}>
-        <Float speed={5} rotationIntensity={1} floatIntensity={2}>
-          <Sphere args={[1.5, 32, 32]} scale={[2, 1, 1]}>
+      {/* Phase 3: The Holographic Gas Cloud (Aggressive Evasive Target) */}
+      <group position={[5, 5, 8]} ref={plumeRef}>
+        <Float speed={2} rotationIntensity={2} floatIntensity={1}>
+          <Sphere args={[2, 64, 64]}>
             <MeshDistortMaterial
-              color="#ff3000"
-              speed={4}
-              distort={0.4}
+              color="#00ffff"
+              speed={5}
+              distort={0.6}
               radius={1}
               transparent
-              opacity={0.3}
-              emissive="#ff1000"
-              emissiveIntensity={2}
+              opacity={0.4}
+              emissive="#0088ff"
+              emissiveIntensity={4}
             />
           </Sphere>
         </Float>
         
         <Points positions={particles.positions} sizes={particles.sizes}>
           <pointsMaterial 
-            color="#ff6000" 
-            size={0.05} 
+            color="#00ffff" 
+            size={0.08} 
             transparent 
-            opacity={0.6} 
+            opacity={0.8} 
             blending={THREE.AdditiveBlending}
           />
         </Points>
         
         <Text
-          position={[0, 2, 0]}
-          fontSize={0.3}
-          color="#ff3000"
+          position={[0, 3, 0]}
+          fontSize={0.4}
+          color="#00ffff"
           anchorX="center"
           anchorY="middle"
-          font="https://fonts.gstatic.com/s/roboto/v18/KFOmCnqEu92Fr1Mu4mxM.woff"
         >
-          HAZARD_DETECTED: LEL_THREAT_HIGH
+          APF_OBSTACLE: GAS_PLUME_DETECTED
         </Text>
       </group>
 
-      {/* Drone Hologram */}
-      <Float speed={10} rotationIntensity={0.5} floatIntensity={0.5}>
-        <group position={pos} ref={droneRef}>
-          <Trail
-            width={0.2}
-            length={10}
-            color={new THREE.Color(2, 0.1, 0.1)}
-            attenuation={(t) => t * t}
-          >
-            <mesh>
-              <Box args={[0.4, 0.1, 0.4]}>
-                <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={5} />
-              </Box>
-            </mesh>
-          </Trail>
-          
-          <mesh position={[0, 0.2, 0]}>
-            <Cylinder args={[0.05, 0.05, 0.1]}>
-              <meshStandardMaterial color="#fff" emissive="#fff" emissiveIntensity={2} />
+      {/* Phase 3: The Sovereign Drone & Glowing Trajectory */}
+      <group position={pos} ref={droneRef}>
+        <Trail
+          width={0.5}
+          length={40}
+          color={new THREE.Color(0, 1, 1)}
+          attenuation={(t) => t * t}
+        >
+          <group>
+            {/* High-Fidelity Drone Representation */}
+            <Box args={[0.5, 0.1, 0.5]}>
+              <meshStandardMaterial color="#00ffcc" emissive="#00ffcc" emissiveIntensity={5} />
+            </Box>
+            <Cylinder args={[0.05, 0.3, 0.2]} position={[0, -0.15, 0]}>
+              <meshStandardMaterial color="#444" />
             </Cylinder>
-          </mesh>
+          </group>
+        </Trail>
 
-          <Text
-            position={[0, 0.5, 0]}
-            fontSize={0.2}
-            color="white"
-            anchorX="center"
-            anchorY="middle"
-          >
-            VS_UNIT_01
-          </Text>
-        </group>
-      </Float>
+        <Text
+          position={[0, 0.8, 0]}
+          fontSize={0.3}
+          color="cyan"
+          anchorX="center"
+          anchorY="middle"
+        >
+          VS_UNIT_01 | AUTONOMOUS_APF
+        </Text>
+      </group>
       
-      {/* Ground Plane */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, -0.05, 0]} receiveShadow>
+      {/* Ground Grid */}
+      <gridHelper args={[100, 50, "#00aaaa", "#050505"]} position={[0, 0, 0]} />
+      <mesh rotation-x={-Math.PI / 2} position={[0, -0.1, 0]}>
         <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#111" transparent opacity={0.5} roughness={0.8} />
+        <meshStandardMaterial color="#020202" />
       </mesh>
-      <gridHelper args={[100, 50, "#222", "#0a0a0a"]} position={[0, 0, 0]} />
     </>
   );
 };
