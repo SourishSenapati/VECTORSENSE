@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="chemical_plant_hazard">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin name="gz::sim::systems::Physics" filename="gz-sim-physics-system"/>
+    <plugin name="gz::sim::systems::UserCommands" filename="gz-sim-user-commands-system"/>
+    <plugin name="gz::sim::systems::SceneBroadcaster" filename="gz-sim-scene-broadcaster-system"/>
+    <plugin name="gz::sim::systems::Sensors" filename="gz-sim-sensors-system">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Distillation Column -->
+    <model name="distillation_column">
+      <static>true</static>
+      <pose>10 0 10 0 0 0</pose>
+      <link name="link">
+        <visual name="column_visual">
+          <geometry><cylinder><radius>1.5</radius><length>20</length></cylinder></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient><diffuse>0.5 0.5 0.5 1</diffuse></material>
+        </visual>
+        <collision name="column_collision">
+          <geometry><cylinder><radius>1.5</radius><length>20</length></cylinder></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Pipe Rack with Leak Plugin -->
+    <model name="pipe_rack">
+      <static>true</static>
+      <pose>0 10 5 0 0 0</pose>
+      <link name="link">
+        <visual name="rack_visual">
+          <geometry><box><size>20 0.5 0.5</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.3 0.3 0.3 1</diffuse>
+          </material>
+        </visual>
+        
+        <!-- Particle Emitter for Gas Leak -->
+        <particle_emitter name="gas_leak_emitter" type="box">
+          <pose>0 0 0.5 0 0 0</pose>
+          <size>1 1 1</size>
+          <rate>50</rate>
+          <duration>0</duration>
+          <emitting>false</emitting>
+          <particle_size>0.2 0.2 0.2</particle_size>
+          <lifetime>2</lifetime>
+          <color_start>1 1 1 0.5</color_start>
+          <color_end>0.5 0.5 0.5 0</color_end>
+        </particle_emitter>
+      </link>
+      
+      <plugin name="vectorsense::GasLeakPlugin" filename="libGasLeakPlugin.so">
+        <leak_time>10.0</leak_time>
+        <emitter_name>gas_leak_emitter</emitter_name>
+      </plugin>
+    </model>
+  </world>
+</sdf>

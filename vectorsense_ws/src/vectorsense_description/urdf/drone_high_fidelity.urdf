@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<robot name="vectorsense_drone">
+  <!-- 
+    Directive 2.1: Sovereign URDF Skeleton.
+    Extracted kinematic tree for physics-accurate Gazebo simulation.
+    Coordinate System: Z-up, X-forward.
+  -->
+
+  <!-- Materials -->
+  <material name="industrial_steel">
+    <color rgba="0.7 0.7 0.7 1.0"/>
+  </material>
+  <material name="carbon_composite">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+
+  <!-- Base Link: DroneFYDPBase (Center of Gravity) -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="2.5"/>
+      <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.05" iyz="0" izz="0.08"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/DroneFYDPBase.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="industrial_steel"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/DroneFYDPBase.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Rigid Link: Xbeam -->
+  <link name="xbeam_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/Xbeam.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="industrial_steel"/>
+    </visual>
+  </link>
+  <joint name="xbeam_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="xbeam_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Rigid Link: 180beam -->
+  <link name="beam180_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/180beam.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="industrial_steel"/>
+    </visual>
+  </link>
+  <joint name="beam180_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="beam180_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 1.5708"/>
+  </joint>
+
+  <!-- Rigid Link: top_plate -->
+  <link name="top_plate_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/top_plate.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="carbon_composite"/>
+    </visual>
+  </link>
+  <joint name="top_plate_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="top_plate_link"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Dynamic Propellers: motor_attachment -->
+  <!-- Joint Rule: Continuous (revolute) spinning on the Z-axis -->
+  <link name="motor_fr_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/motor_attachment.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="motor_fr_joint" type="continuous">
+    <parent link="xbeam_link"/>
+    <child link="motor_fr_link"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0.25 0.25 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="motor_fl_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/motor_attachment.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="motor_fl_joint" type="continuous">
+    <parent link="xbeam_link"/>
+    <child link="motor_fl_link"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="-0.25 0.25 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Grounding: Gazebo integration -->
+  <gazebo>
+    <plugin name="gazebo_ros_p3d" filename="libgazebo_ros_p3d.so">
+      <ros>
+        <namespace>vectorsense</namespace>
+      </ros>
+      <body_name>base_link</body_name>
+      <topic_name>odom</topic_name>
+      <update_rate>50.0</update_rate>
+    </plugin>
+  </gazebo>
+
+</robot>

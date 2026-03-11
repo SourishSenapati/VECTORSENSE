@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<robot name="vectorsense">
+
+  <!-- Materials -->
+  <material name="industrial_grey">
+    <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+  
+  <material name="carbon_fiber">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+
+  <!-- Base Link: DroneFYDPBase -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <mass value="1.5"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.02"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/DroneFYDPBase.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="industrial_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.2 0.2 0.1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Top Plate -->
+  <link name="top_plate_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.3"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/top_plate.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="carbon_fiber"/>
+    </visual>
+    <!-- Camera Sensor -->
+    <sensor name="vectorsense_cam" type="camera">
+      <pose>0 0 0.02 0 0 0</pose>
+      <camera>
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>1280</width>
+          <height>720</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+      </camera>
+      <always_on>1</always_on>
+      <update_rate>60</update_rate>
+      <visualize>true</visualize>
+      <topic>/vectorsense/camera/image_raw</topic>
+    </sensor>
+  </link>
+
+  <joint name="top_plate_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="top_plate_link"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="top_plate_link">
+    <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+      <ros>
+        <namespace>vectorsense</namespace>
+        <remapping>image_raw:=camera/image_raw</remapping>
+      </ros>
+      <camera_name>camera</camera_name>
+      <frame_name>top_plate_link</frame_name>
+      <hack_baseline>0.07</hack_baseline>
+    </plugin>
+  </gazebo>
+
+  <!-- Beams -->
+  <!-- XBeam -->
+  <link name="xbeam_link">
+    <inertial>
+      <origin xyz="0 0.1 0" rpy="0 0 0"/>
+      <mass value="0.2"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/Xbeam.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="industrial_grey"/>
+    </visual>
+  </link>
+
+  <joint name="xbeam_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="xbeam_link"/>
+    <origin xyz="0 0 0.03" rpy="0 0 0.7854"/> <!-- 45 deg -->
+  </joint>
+
+  <!-- 180Beam -->
+  <link name="beam180_link">
+    <inertial>
+      <origin xyz="0 0.1 0" rpy="0 0 0"/>
+      <mass value="0.2"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/180beam.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="industrial_grey"/>
+    </visual>
+  </link>
+
+  <joint name="beam180_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="beam180_link"/>
+    <origin xyz="0 0 0.03" rpy="0 0 -0.7854"/> <!-- -45 deg -->
+  </joint>
+
+  <!-- Mechanism Fix -->
+  <link name="mechanism_fix_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/mechanisam_fix.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="mechanism_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="mechanism_fix_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Motor Attachments (Revolute) -->
+  <!-- Assuming 4 motors for simplicity, though SLDPRT is singular -->
+  <link name="motor_link_0">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_description/meshes/motor_attachment.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="motor_joint_0" type="continuous">
+    <parent link="xbeam_link"/>
+    <child link="motor_link_0"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0.3 0.02" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Additional motors would follow similarly... -->
+
+</robot>

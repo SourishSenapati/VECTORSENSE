@@ -26,3 +26,27 @@ log/
 # OS
 .DS_Store
 Thumbs.db
+
+# NodeJS
+node_modules/
+dist/
+.env
+
+# VS Code
+.vscode/
+
+# Python Extras
+*.py[cod]
+__pycache__/
+
+# CAD/Meshes
+*.STL
+*.stl
+!vectorsense_ws/src/vectorsense_description/meshes/*.stl
+
+# Temporary / Scratch
+cad_to_mesh.py
+convert_cad.py
+gazebo_to_vnc_bridge.py
+gazebo_zmq_bridge.py
+chemical_plant.world

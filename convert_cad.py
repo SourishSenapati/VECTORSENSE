@@ -1,47 +1,53 @@
 """
 Module for converting CAD (SolidWorks) files to STL meshes using FreeCAD.
+
+This module provides an automated pipeline for exporting proprietary
+SolidWorks parts and assemblies into a format compatible with
+robotic physics simulations (Gazebo/GZ).
 """
 import os
 import sys
 
-# We do not use f-strings or complex syntax if it is failing
-# We use standard string concatenation
+# Standard library and logic
 try:
     import FreeCAD
     import Mesh
 except ImportError:
-    print("Could not import FreeCAD/Mesh")
+    print("Error: FreeCAD modules not found. Ensure FreeCAD is installed.")
     sys.exit(1)
 
-def convert():
+def convert_solidworks_to_stl():
     """
-    Scans the source directory for .sldprt and .sldasm files and converts
-    them to .stl in the output directory.
+    Main execution loop to find and convert SolidWorks binaries to STL.
     """
-    in_dir = "/mnt/d/PROJECT/ROBOTICS/VECTORSENSE/zd975/FYP frame/"
+    in_dir = (
+        "/mnt/d/PROJECT/ROBOTICS/VECTORSENSE/zd975/FYP frame/"
+    )
     out_dir = "/mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_description/meshes/"
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    for f in os.listdir(in_dir):
-        if f.lower().endswith(".sldprt") or f.lower().endswith(".sldasm"):
-            input_path = os.path.join(in_dir, f)
-            basename = os.path.splitext(f)[0]
-            output_path = os.path.join(out_dir, basename + ".stl")
+    # Filter for supported SolidWorks binary formats
+    target_files = [f for f in os.listdir(in_dir) if f.lower().endswith((".sldprt", ".sldasm"))]
 
-            print("Converting " + input_path + " -> " + output_path)
-            try:
-                doc = FreeCAD.open(input_path)
-                objs = doc.Objects
-                if len(objs) > 0:
-                    Mesh.export(objs, output_path)
-                    print("DONE: " + f)
-                else:
-                    print("EMPTY MESH: " + f)
-                FreeCAD.closeDocument(doc.Name)
-            except Exception as e: # pylint: disable=broad-except
-                print("FAILED " + f + ": " + str(e))
+    for filename in target_files:
+        input_path = os.path.join(in_dir, filename)
+        basename = os.path.splitext(filename)[0]
+        output_path = os.path.join(out_dir, basename + ".stl")
 
-convert()
+        print("Processing: " + input_path)
+        try:
+            doc = FreeCAD.open(input_path)
+            objs = doc.Objects
+            if objs:
+                Mesh.export(objs, output_path)
+                print("Exported: " + filename)
+            else:
+                print("Empty document: " + filename)
+            FreeCAD.closeDocument(doc.Name)
+        except Exception as error:  # pylint: disable=broad-except
+            # Broad exception is necessary due to proprietary CAD kernel unpredictability
+            print("Failed: " + filename + " Details: " + str(error))
 
+convert_solidworks_to_stl()

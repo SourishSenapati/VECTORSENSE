@@ -40,15 +40,26 @@ async def start_gateway():
     
     async def add_drone_node(name):
         drone = await swarm_obj.add_object(idx, name)
+        # Explicit string-based NodeIds to satisfy Directive 1.2
+        # Example format: ns=2;s=VectorSense_Alpha_1_Leak_X
         nodes = {
-            "leak_x": await drone.add_variable(idx, f"{name}_Leak_X", 0.0),
-            "leak_y": await drone.add_variable(idx, f"{name}_Leak_Y", 0.0),
-            "concentration": await drone.add_variable(idx, f"{name}_Concentration", 0.0),
-            "status": await drone.add_variable(idx, f"{name}_Status", 0) # 0=Nominal, 1=Alert
+            "leak_x": await drone.add_variable(ua.NodeId(f"VectorSense_{name}_Leak_X", idx), f"{name}_Leak_X", 0.0),
+            "leak_y": await drone.add_variable(ua.NodeId(f"VectorSense_{name}_Leak_Y", idx), f"{name}_Leak_Y", 0.0),
+            "concentration": await drone.add_variable(ua.NodeId(f"VectorSense_{name}_Concentration", idx), f"{name}_Concentration", 0.0),
+            "status": await drone.add_variable(ua.NodeId(f"VectorSense_{name}_Status", idx), f"{name}_Status", 0)
         }
         for node in nodes.values():
             await node.set_writable()
         return nodes
+
+    # Directive 3.1: Closed-Loop Industrial Control (The Kill Switch)
+    control_obj = await server.nodes.objects.add_object(idx, "Hazard_Mitigation")
+    valve_104a = await control_obj.add_variable(
+        ua.NodeId("Actuate_Emergency_Isolation_Valve_104A", idx), 
+        "Valve_104A_State", 
+        "OPEN"
+    )
+    await valve_104a.set_writable()
 
     # Initialize ZMQ Subscriber (Dedicated telemetry port)
     context = zmq.asyncio.Context()
