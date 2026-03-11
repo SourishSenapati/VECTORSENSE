@@ -8,20 +8,53 @@
     <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics" />
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands" />
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster" />
-    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact" />
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal" />
 
-    <!-- Light: Sun -->
     <include>
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
     </include>
 
-    <!-- Environment: OpenRobotics Refinery -->
     <include>
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Refinery</uri>
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- VectorSense Industrial Hazard Plugin -->
+    <!-- Phase 1: Thermal Anomaly (Reactor) -->
+    <model name="thermal_reactor">
+      <static>true</static>
+      <pose>10 -5 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>2</radius><length>5</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>2</radius><length>5</length></cylinder></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+          <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
+            <temperature>450.0</temperature> <!-- High temp for anomaly detection -->
+          </plugin>
+        </link>
+      </model>
+
+    <!-- Phase 1: Acoustic Anomaly (Pump Station) -->
+    <model name="acoustic_pump">
+      <static>true</static>
+      <pose>-10 10 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>1 1 1</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Gas Leak Plugin -->
     <plugin filename="GasLeakPlugin" name="vectorsense::GasLeakPlugin">
       <leak_origin>5.0 5.0 8.0</leak_origin>
       <activation_time>10.0</activation_time>

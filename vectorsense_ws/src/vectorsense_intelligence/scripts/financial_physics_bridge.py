@@ -11,12 +11,11 @@ logger = logging.getLogger("VectorSense.TruthEngine")
 # ZeroMQ Addresses
 ZMQ_REAL_PHYSICS = "tcp://127.0.0.1:5556" # Ground Truth from Gazebo
 ZMQ_SCADA_NET    = "tcp://127.0.0.1:5557" # Compromised Digital reporting
+ZMQ_MISSION_CMD  = "tcp://127.0.0.1:5558" # Mission Control Command Line
 
 class DiscrepancyEngineBridge:
     """
-    Directive 1.1: Cyber-Physical Discrepancy Engine.
-    Detects state-sponsored sabotage by comparing physical reality (PINN) 
-    against digital reporting (SCADA).
+    Directive 1.1: Cyber-Physical Discrepancy Engine + Multi-Modal Controller.
     """
     def __init__(self, ws_port=8000):
         self.ws_port = ws_port
@@ -26,10 +25,11 @@ class DiscrepancyEngineBridge:
         # Sockets
         self.sub_physics = self.ctx.socket(zmq.SUB)
         self.sub_scada = self.ctx.socket(zmq.SUB)
+        self.pub_mission = self.ctx.socket(zmq.PUB)
         
         # State
         self.last_scada = {}
-        self.last_physics = {}
+        self.last_physics = {"mode": "GAS_TOMOGRAPHY"}
 
     async def start(self):
         self.sub_physics.connect(ZMQ_REAL_PHYSICS)
@@ -37,9 +37,10 @@ class DiscrepancyEngineBridge:
         
         self.sub_scada.connect(ZMQ_SCADA_NET)
         self.sub_scada.setsockopt_string(zmq.SUBSCRIBE, "")
+
+        self.pub_mission.bind(ZMQ_MISSION_CMD)
         
-        logger.info(f"[TRUTH] Ingesting Reality from {ZMQ_REAL_PHYSICS}")
-        logger.info(f"[TRUTH] Ingesting Network from {ZMQ_SCADA_NET}")
+        logger.info(f"[TRUTH] Engine Active. Link: {ZMQ_MISSION_CMD}")
 
         async with websockets.serve(self.ws_handler, "0.0.0.0", self.ws_port):
             await asyncio.gather(
@@ -59,27 +60,24 @@ class DiscrepancyEngineBridge:
             self.last_scada = json.loads(msg)
 
     async def discrepancy_loop(self):
-        """
-        The Intelligence Logic: Detects mismatches between bits and atoms.
-        """
         while True:
-            # Logic: If SCADA says CLOSED but Physics shows LEAK > 0
             is_leaking = self.last_physics.get("leak", False)
             scada_closed = self.last_scada.get("digital_status") == "CLOSED"
+            mission_mode = self.last_physics.get("mode", "GAS_TOMOGRAPHY")
             
             discrepancy = False
             alert_type = "NOMINAL"
 
-            if is_leaking and scada_closed:
+            if mission_mode == "GAS_TOMOGRAPHY" and is_leaking and scada_closed:
                 discrepancy = True
                 alert_type = "SCADA_SPOOFING_DETECTED"
-                logger.warning("!!! CYBER-PHYSICAL DISCREPANCY DETECTED: Physical Leak under Hacked SCADA Status !!!")
 
             payload = {
                 "reality": self.last_physics,
                 "network": self.last_scada,
                 "cyber_physical_discrepancy": discrepancy,
                 "alert_status": alert_type,
+                "mission_mode": mission_mode,
                 "source": "DISCREPANCY_ENGINE"
             }
 
@@ -92,7 +90,12 @@ class DiscrepancyEngineBridge:
     async def ws_handler(self, websocket):
         self.clients.add(websocket)
         try:
-            await websocket.wait_closed()
+            async for message in websocket:
+                data = json.loads(message)
+                if data.get("type") == "MISSION_CHANGE":
+                    new_mode = data.get("mode")
+                    self.pub_mission.send_string(new_mode)
+                    logger.info(f"[MISSION] Requesting Global Shift to: {new_mode}")
         finally:
             self.clients.remove(websocket)
 
