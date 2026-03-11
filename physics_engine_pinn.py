@@ -13,7 +13,6 @@ class MultiModalPINN:
     """
     def __init__(self):
         self.ctx = zmq.Context()
-        
         # Sockets
         self.sub_sock = self.ctx.socket(zmq.SUB)
         self.sub_sock.connect("tcp://127.0.0.1:5555")
@@ -27,12 +26,11 @@ class MultiModalPINN:
         self.pub_sock.bind("tcp://127.0.0.1:5556")
 
         # Mission State
-        self.mission_mode = "GAS_TOMOGRAPHY" 
+        self.mission_mode = "GAS_TOMOGRAPHY"
 
     def run(self):
         """Main execution loop for mission-adaptive intelligence."""
         print("[ENGINE] Multi-Modal Adaptive Brain Active...")
-        
         while True:
             # 1. Listen for Mission Changes
             try:
@@ -41,15 +39,12 @@ class MultiModalPINN:
                 print(f"[MISSION] Brain profile shifted to: {self.mission_mode}")
             except zmq.Again:
                 pass
-
             # 2. Process Physics Reality
             try:
                 msg = self.sub_sock.recv_string(flags=zmq.NOBLOCK)
                 data = json.loads(msg)
-                
                 processed_intel = self.process_multi_modal(data)
                 self.pub_sock.send_string(json.dumps(processed_intel))
-                
             except zmq.Again:
                 pass
             time.sleep(0.01)
@@ -85,7 +80,6 @@ class MultiModalPINN:
                 intel["anomaly_type"] = "PUMP CAVITATION DETECTED"
                 intel["db_level"] = db_level
                 intel["anomaly_pos"] = [-10.0, 10.0, 0.5]
-
         return intel
 
 if __name__ == "__main__":

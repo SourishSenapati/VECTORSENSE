@@ -27,12 +27,10 @@ class DiscrepancyEngineBridge:
         self.ws_port = ws_port
         self.clients = set()
         self.ctx = zmq.asyncio.Context()
-        
         # Sockets
         self.sub_physics = self.ctx.socket(zmq.SUB)
         self.sub_scada = self.ctx.socket(zmq.SUB)
         self.pub_mission = self.ctx.socket(zmq.PUB)
-        
         # State
         self.last_scada = {}
         self.last_physics = {"mode": "GAS_TOMOGRAPHY"}
@@ -41,14 +39,10 @@ class DiscrepancyEngineBridge:
         """Initializes sockets and starts the asynchronous processing loops."""
         self.sub_physics.connect(ZMQ_REAL_PHYSICS)
         self.sub_physics.setsockopt_string(zmq.SUBSCRIBE, "")
-        
         self.sub_scada.connect(ZMQ_SCADA_NET)
         self.sub_scada.setsockopt_string(zmq.SUBSCRIBE, "")
-
         self.pub_mission.bind(ZMQ_MISSION_CMD)
-        
         logger.info("[TRUTH] Engine Active. Link: %s", ZMQ_MISSION_CMD)
-
         async with websockets.serve(self.ws_handler, "0.0.0.0", self.ws_port):
             await asyncio.gather(
                 self.physics_listener(),
@@ -74,14 +68,11 @@ class DiscrepancyEngineBridge:
             is_leaking = self.last_physics.get("leak", False)
             scada_closed = self.last_scada.get("digital_status") == "CLOSED"
             mission_mode = self.last_physics.get("mode", "GAS_TOMOGRAPHY")
-            
             discrepancy = False
             alert_type = "NOMINAL"
-
             if mission_mode == "GAS_TOMOGRAPHY" and is_leaking and scada_closed:
                 discrepancy = True
                 alert_type = "SCADA_SPOOFING_DETECTED"
-
             payload = {
                 "reality": self.last_physics,
                 "network": self.last_scada,
@@ -90,11 +81,9 @@ class DiscrepancyEngineBridge:
                 "mission_mode": mission_mode,
                 "source": "DISCREPANCY_ENGINE"
             }
-
             if self.clients:
                 raw_payload = json.dumps(payload)
                 await asyncio.gather(*[c.send(raw_payload) for c in self.clients])
-            
             await asyncio.sleep(0.1)
 
     async def ws_handler(self, websocket):
