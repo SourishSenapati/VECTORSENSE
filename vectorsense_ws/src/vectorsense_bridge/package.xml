@@ -12,7 +12,12 @@
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_msgs</depend>
   <depend>cv_bridge</depend>
+  <exec_depend>python3-zmq</exec_depend>
+  <exec_depend>python3-msgpack</exec_depend>
+  <exec_depend>python3-lz4</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

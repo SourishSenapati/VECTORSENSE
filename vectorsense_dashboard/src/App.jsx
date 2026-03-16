@@ -1,30 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars, PerspectiveCamera, Environment } from '@react-three/drei';
-import { Activity, Zap, Cpu } from 'lucide-react';
+import { PerspectiveCamera, Environment } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import SpatialTwin from './components/SpatialTwin';
+import MissionControl from './components/MissionControl';
 import ThreatEconomics from './components/ThreatEconomics';
 import MitigationControl from './components/MitigationControl';
-import MissionControl from './components/MissionControl';
 import SystemDiagnostics from './components/SystemDiagnostics';
 import './App.css';
 
 function App() {
+  const [wsStatus, setWsStatus] = useState("DISCONNECTED");
   const [telemetry, setTelemetry] = useState({
-    pos: [0, 5, 10],
-    reality: {
-      mass_loss: 0, status: "CORE_SYNC_OK", leak: false, mode: "GAS_TOMOGRAPHY",
-      sensor_precision: 99.98, physics_tflops: 12.4, worm_ledger: "INTEGRITY_OK"
-    },
-    network: { digital_status: "CLOSED", digital_pressure: "1.0 atm", network_integrity: "SECURE" },
-    cyber_physical_discrepancy: false,
+    reality: { mass_loss: 0, status: "CORE_SYNC_OK", leak: false, mode: "GAS_TOMOGRAPHY" },
     alert_status: "NOMINAL",
+    cyber_physical_discrepancy: false,
     telemetry_raw: "",
     infrastructure_status: {}
   });
 
-  const [wsStatus, setWsStatus] = useState("DISCONNECTED");
-  const [kinematicLoss, setKinematicLoss] = useState(false);
+  // THE HIGH-PERFORMANCE SINK: Reference stored خارج React state for 60FPS updates
+  const telemetryRef = useRef({
+    pos: [0, 5, 0],
+    quat: [0, 0, 0, 1],
+    reality: {}
+  });
+
   const ws = useRef(null);
 
   useEffect(() => {
@@ -40,115 +41,114 @@ function App() {
         try {
           const data = JSON.parse(event.data);
           if (data.source === "DISCREPANCY_ENGINE") {
-            const isLoss = data.alert_status === "KINEMATIC_LOSS";
-            setKinematicLoss(isLoss);
-            setTelemetry(current => ({
-              ...current,
+            // Update the high-speed reference (BUTTERY SMOOTH)
+            telemetryRef.current = {
+              pos: data.reality?.pos || telemetryRef.current.pos,
+              quat: data.reality?.quat || telemetryRef.current.quat,
+              reality: data.reality
+            };
+
+            // Update UI state (Throttled by React)
+            setTelemetry({
               reality: data.reality,
-              network: data.network,
-              cyber_physical_discrepancy: data.cyber_physical_discrepancy,
               alert_status: data.alert_status,
+              cyber_physical_discrepancy: data.cyber_physical_discrepancy,
               telemetry_raw: data.telemetry_raw,
-              infrastructure_status: data.infrastructure_status,
-              pos: isLoss ? current.pos : (data.reality?.pos ?? current.pos),
-            }));
+              infrastructure_status: data.infrastructure_status
+            });
           }
-        } catch (parseErr) { console.warn("WS frame parse error:", parseErr); }
+        } catch (e) { console.error("Parse Fail", e); }
       };
     };
-
     connectWS();
     return () => ws.current?.close();
   }, []);
 
-  const handleModeChange = (newMode) => {
-    if (ws.current && wsStatus === "CONNECTED") {
-      ws.current.send(JSON.stringify({ type: "MISSION_CHANGE", mode: newMode }));
-    }
+  const handleModeChange = (mode) => {
+    if (ws.current) ws.current.send(JSON.stringify({ type: "MISSION_CHANGE", mode }));
   };
 
   const isHacked = telemetry.cyber_physical_discrepancy;
 
   return (
-    <div className={`h-screen w-screen overflow-hidden ${isHacked ? 'bg-red-950/10' : ''}`}>
+    <div className="relative h-screen w-screen bg-black overflow-hidden font-sans">
       
-      {/* 1. LAYER 0: THE SPATIAL TWIN (BACKGROUND) */}
-      <div className="absolute inset-0 z-0">
-        <Canvas shadows dpr={[1, 2]}>
-          <PerspectiveCamera makeDefault position={[20, 10, 20]} fov={50} />
-          <OrbitControls target={[0, 5, 0]} maxPolarAngle={Math.PI / 2.1} />
-          <color attach="background" args={['#020205']} />
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-          <SpatialTwin pos={telemetry.pos} reality={telemetry.reality} frozen={kinematicLoss} />
+      {/* FULL-BLEED SPATIAL TWIN CANVAS */}
+      <div className="absolute inset-0 pointer-events-none">
+        <Canvas shadows gl={{ antialias: false, stencil: false, depth: true }}>
+          <PerspectiveCamera makeDefault position={[30, 15, 30]} fov={45} />
+          <color attach="background" args={['#050510']} />
           <Environment preset="night" />
+          
+          <SpatialTwin telemetryRef={telemetryRef} />
+
+          <EffectComposer disableNormalPass>
+            <Bloom intensity={1.5} luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} />
+            <Vignette eskil={false} offset={0.1} darkness={1.1} />
+          </EffectComposer>
         </Canvas>
       </div>
 
-      {/* 2. LAYER 1: GLASS NAV & STATS */}
-      <header className={`absolute top-6 left-6 right-6 z-50 liquid-glass p-4 flex justify-between items-center transition-all duration-700 ${isHacked ? 'border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.2)]' : ''}`}>
-        <div className="flex items-center gap-6">
-          <div className={`h-10 w-10 flex items-center justify-center font-bold text-lg rounded-xl liquid-glass-soft transition-colors duration-500 ${isHacked ? 'text-red-500' : 'text-emerald-400'}`}>VS</div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white/90">VectorSense <span className="text-white/30 font-light mx-2">|</span> <span className="mono text-xs text-white/50">PHYSICS_TWIN_V4.0</span></h1>
-            <div className="flex items-center gap-3 text-[10px] mono uppercase mt-1">
-              <span className={`h-1.5 w-1.5 rounded-full ${wsStatus === 'CONNECTED' ? 'bg-emerald-400 accent-glow' : 'bg-rose-500 animate-pulse'}`} />
-              <span className="text-white/40">Status:</span> <span className={wsStatus === 'CONNECTED' ? 'text-emerald-400' : 'text-rose-500'}>{wsStatus}</span>
-              <span className="text-white/40 ml-2">Kernel:</span> <span className="text-emerald-400/70">ASYNC_PINN_OK</span>
+      {/* OVERLAY: LIQUID GLASS PANELS */}
+      <div className="relative z-50 h-full w-full p-8 pointer-events-none">
+        
+        {/* TOP BAR: HUD */}
+        <div className="flex justify-between items-start pointer-events-auto">
+          <div className="bg-black/40 backdrop-blur-xl border border-white/10 p-4 rounded-2xl flex items-center gap-6">
+            <div className="h-12 w-12 bg-cyan-500/20 rounded-xl border border-cyan-500/50 flex items-center justify-center font-black text-cyan-400">VS</div>
+            <div>
+              <h1 className="text-xl font-black text-white leading-tight uppercase tracking-tighter">VectorSense Ghost Core</h1>
+              <div className="flex items-center gap-2 text-[10px] text-white/40 font-mono tracking-widest mt-1 uppercase">
+                <span className={`h-2 w-2 rounded-full ${wsStatus === 'CONNECTED' ? 'bg-cyan-400' : 'bg-red-500 animate-pulse'}`} />
+                {wsStatus} <span className="mx-1">/</span> LINUX_IPC_OK <span className="mx-1">/</span> TRT_STABLE
+              </div>
             </div>
+          </div>
+
+          <div className="flex gap-4">
+            <GlassPanel label="NS_RESIDUAL" value={telemetry.reality.ns_residual?.toFixed(6) || "0.000000"} color="text-cyan-400" />
+            <GlassPanel label="MASS_LOSS" value={`${telemetry.reality.mass_loss || 0} kg/s`} color="text-red-400" />
+            <GlassPanel label="FIN_EXPOSURE" value={`$${(telemetry.reality.commodity_loss_rate || 0).toLocaleString()}/hr`} color="text-emerald-400" />
           </div>
         </div>
 
-        <div className="flex gap-10 pr-4">
-          <StatBox icon={<Activity size={14}/>} label="PRECISION" value={`${(telemetry.reality.sensor_precision || 99.98).toFixed(2)}%`} color="text-emerald-400" />
-          <StatBox icon={<Zap size={14}/>} label="THROUGHPUT" value={`${(telemetry.reality.physics_tflops || 12.4).toFixed(1)}T`} color="text-cyan-400" />
-          <StatBox icon={<Cpu size={14}/>} label="ADAPTIVE" value={telemetry.reality.mode} color="text-white/80" />
-        </div>
-      </header>
+        {/* RIGHT FLANK: CONTROL & ECONOMICS */}
+        <div className="absolute right-8 top-32 flex flex-col gap-6 w-80 pointer-events-auto">
+          <div className="bg-black/60 backdrop-blur-2xl border border-white/5 p-6 rounded-3xl shadow-2xl">
+            <MissionControl currentMode={telemetry.reality.mode} onModeChange={handleModeChange} />
+          </div>
+          
+          <div className="bg-black/60 backdrop-blur-2xl border border-white/5 p-6 rounded-3xl shadow-2xl">
+            <ThreatEconomics massFlux={telemetry.reality.mass_loss || 0} activeTime={0} gasType="CH4" />
+          </div>
 
-      {/* 3. LAYER 2: INTERACTIVE MODULES */}
-      <div className="absolute top-32 right-6 z-40 flex flex-col gap-6 w-80">
-        <div className="liquid-glass p-5">
-           <MissionControl currentMode={telemetry.reality.mode} onModeChange={handleModeChange} />
+          <div className="bg-black/60 backdrop-blur-2xl border border-white/5 p-6 rounded-3xl shadow-2xl">
+            <MitigationControl valveState={isHacked ? "SPOOFED" : "LOCKED"} />
+          </div>
         </div>
-        <div className="liquid-glass p-5">
-           <ThreatEconomics massFlux={telemetry.reality.mass_loss || 0} activeTime={0} gasType="Hydrocarbon" />
+
+        {/* BOTTOM: SYSTEM CONSOLE */}
+        <div className="absolute bottom-8 left-8 right-8 pointer-events-auto">
+          <SystemDiagnostics 
+            telemetryRaw={telemetry.telemetry_raw} 
+            infraStatus={telemetry.infrastructure_status} 
+          />
         </div>
-        <div className="liquid-glass p-5">
-           <MitigationControl valveState={isHacked ? "SPOOFED" : (telemetry.network.digital_status || "CLOSED")} />
-        </div>
+
       </div>
 
-      {/* 4. LAYER 3: PERSISTENT DIAGNOSTICS */}
-      <SystemDiagnostics 
-        telemetryRaw={telemetry.telemetry_raw} 
-        infraStatus={telemetry.infrastructure_status} 
-      />
-
-      {/* 5. ALERTS & OVERLAYS */}
-      {kinematicLoss && (
-        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-xl">
-          <div className="liquid-glass p-10 border-yellow-500/50 max-w-2xl text-center">
-            <h2 className="text-4xl font-black text-yellow-500 mb-4 tracking-tighter uppercase">ERR_0x04: KINEMATIC_TIMEOUT</h2>
-            <p className="mono text-yellow-200/60 text-sm mb-6 uppercase tracking-widest">WSL Physics engine link broken. Drone state is stale.</p>
-            <div className="liquid-glass-soft p-4 rounded-lg mono text-xs text-left">
-              $ ros2 launch vectorsense_drone_sim full_demo.launch.py
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isHacked && !kinematicLoss && (
-        <div className="absolute inset-0 z-[150] pointer-events-none bg-red-950/20 backdrop-blur-[1px] animate-pulse" />
+      {isHacked && (
+        <div className="absolute inset-0 z-[100] border-[20px] border-red-500/20 pointer-events-none animate-pulse" />
       )}
     </div>
   );
 }
 
-function StatBox({ icon, label, value, color }) {
+function GlassPanel({ label, value, color }) {
   return (
-    <div className="flex flex-col items-start min-w-[100px]">
-      <div className="text-[10px] mono text-white/30 uppercase tracking-widest flex items-center gap-1.5 mb-1">{icon} {label}</div>
-      <div className={`text-sm font-bold tracking-tight ${color}`}>{value}</div>
+    <div className="bg-black/40 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-2xl min-w-[160px]">
+      <div className="text-[10px] font-mono text-white/30 tracking-[0.2em] mb-1 uppercase">{label}</div>
+      <div className={`text-xl font-black tracking-tighter ${color}`}>{value}</div>
     </div>
   );
 }

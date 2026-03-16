@@ -30,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cuda_patrol_node = scripts.cuda_patrol_node:main',
+            'black_swan_demo = scripts.black_swan_demo:main',
         ],
     },
 )

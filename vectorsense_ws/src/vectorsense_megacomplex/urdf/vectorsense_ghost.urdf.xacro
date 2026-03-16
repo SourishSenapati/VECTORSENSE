@@ -1,55 +1,68 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="vectorsense_drone">
 
-  <!-- Stable Ghost Core Inertial -->
+  <!-- THE GHOST CORE: Mathematically Perfect Physics Skeleton -->
   <link name="base_link">
+    <!-- PHYSICS CORE: Zero-Visual, Perfectly Symmetric Intertials -->
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <mass value="2.5"/>
       <inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.06"/>
     </inertial>
+    
+    <!-- COLLISION CORE: Primitive-only to prevent mesh shears -->
     <collision name="base_collision">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <box size="0.2 0.2 0.1"/>
       </geometry>
     </collision>
-    <!-- Visual Skin: Dressing the ghost -->
-    <visual>
+
+    <!-- VISUAL SKINS: Weightless CAD layers (No Collision / No Inertial) -->
+    <visual name="skin_base">
       <geometry>
         <mesh filename="package://vectorsense_megacomplex/meshes/DroneFYDPBase.stl" scale="0.001 0.001 0.001"/>
       </geometry>
     </visual>
+    
+    <visual name="skin_xbeam">
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_megacomplex/meshes/Xbeam.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+
+    <visual name="skin_beam180">
+      <origin xyz="0 0 0.05" rpy="0 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://vectorsense_megacomplex/meshes/180beam.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+
+    <visual name="skin_top_plate">
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vectorsense_megacomplex/meshes/top_plate.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
   </link>
 
-  <!-- Weightless Visual Attachments -->
-  <xacro:macro name="visual_part" params="name mesh_file x y z yaw">
-    <link name="${name}_link">
-      <visual>
-        <geometry>
-          <mesh filename="package://vectorsense_megacomplex/meshes/${mesh_file}" scale="0.001 0.001 0.001"/>
-        </geometry>
-      </visual>
-    </link>
-    <joint name="${name}_joint" type="fixed">
-      <parent link="base_link"/>
-      <child link="${name}_link"/>
-      <origin xyz="${x} ${y} ${z}" rpy="0 0 ${yaw}"/>
-    </joint>
-  </xacro:macro>
-
-  <xacro:visual_part name="xbeam" mesh_file="Xbeam.stl" x="0" y="0" z="0.05" yaw="0"/>
-  <xacro:visual_part name="beam180" mesh_file="180beam.stl" x="0" y="0" z="0.05" yaw="1.5708"/>
-  <xacro:visual_part name="top_plate" mesh_file="top_plate.stl" x="0" y="0" z="0.1" yaw="0"/>
-
-  <!-- Motors and Propulsion -->
+  <!-- MOTORS: Exact Symmetry (X,Y = +/- 0.225m) -->
   <xacro:macro name="motor" params="name x y index direction">
     <link name="motor_${name}">
+      <!-- Weightless visual anchor -->
       <visual>
         <geometry>
           <mesh filename="package://vectorsense_megacomplex/meshes/motor_attachment.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </visual>
+      <!-- Small placeholder inertial to satisfy some solvers, though visual-only is intended -->
+      <inertial>
+        <mass value="0.001"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+      </inertial>
     </link>
+
     <joint name="motor_${name}_joint" type="continuous">
       <parent link="base_link"/>
       <child link="motor_${name}"/>
@@ -77,10 +90,10 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:motor name="fr" x="0.25" y="-0.25" index="0" direction="ccw"/>
-  <xacro:motor name="fl" x="0.25" y="0.25" index="1" direction="cw"/>
-  <xacro:motor name="br" x="-0.25" y="-0.25" index="2" direction="cw"/>
-  <xacro:motor name="bl" x="-0.25" y="0.25" index="3" direction="ccw"/>
+  <xacro:motor name="fr" x="0.225" y="-0.225" index="0" direction="ccw"/>
+  <xacro:motor name="fl" x="0.225" y="0.225" index="1" direction="cw"/>
+  <xacro:motor name="br" x="-0.225" y="-0.225" index="2" direction="cw"/>
+  <xacro:motor name="bl" x="-0.225" y="0.225" index="3" direction="ccw"/>
 
   <gazebo>
     <plugin filename="gz-sim-multicopter-velocity-control-system" name="gz::sim::systems::MulticopterVelocityControl">
@@ -90,6 +103,11 @@
       <enableVelocityControl>true</enableVelocityControl>
       <maximumLinearVelocity>15.0</maximumLinearVelocity>
       <maximumAngularVelocity>5.0</maximumAngularVelocity>
+    </plugin>
+    
+    <!-- State Publisher for Odometry -->
+    <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+      <dimensions>3</dimensions>
     </plugin>
   </gazebo>
 
