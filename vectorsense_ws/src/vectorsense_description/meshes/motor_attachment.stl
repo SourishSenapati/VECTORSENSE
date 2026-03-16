@@ -1,0 +1,30 @@
+solid motor_attachment.stl
+  facet normal 0 0 0
+    outer loop
+      vertex 0 0 0
+      vertex 0.05 0 0
+      vertex 0.05 0.05 0
+    endloop
+  endfacet
+  facet normal 0 0 0
+    outer loop
+      vertex 0 0 0
+      vertex 0.05 0.05 0
+      vertex 0 0.05 0
+    endloop
+  endfacet
+  facet normal 0 0 0
+    outer loop
+      vertex 0 0 0.1
+      vertex 0.05 0 0.1
+      vertex 0.05 0.05 0.1
+    endloop
+  endfacet
+  facet normal 0 0 0
+    outer loop
+      vertex 0 0 0.1
+      vertex 0.05 0.05 0.1
+      vertex 0 0.05 0.1
+    endloop
+  endfacet
+endsolid motor_attachment.stl

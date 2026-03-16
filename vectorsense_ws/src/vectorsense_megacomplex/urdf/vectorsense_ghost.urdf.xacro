@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="vectorsense_drone">
+
+  <!-- Stable Ghost Core Inertial -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="2.5"/>
+      <inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.06"/>
+    </inertial>
+    <collision name="base_collision">
+      <geometry>
+        <box size="0.2 0.2 0.1"/>
+      </geometry>
+    </collision>
+    <!-- Visual Skin: Dressing the ghost -->
+    <visual>
+      <geometry>
+        <mesh filename="package://vectorsense_megacomplex/meshes/DroneFYDPBase.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- Weightless Visual Attachments -->
+  <xacro:macro name="visual_part" params="name mesh_file x y z yaw">
+    <link name="${name}_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://vectorsense_megacomplex/meshes/${mesh_file}" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${name}_link"/>
+      <origin xyz="${x} ${y} ${z}" rpy="0 0 ${yaw}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:visual_part name="xbeam" mesh_file="Xbeam.stl" x="0" y="0" z="0.05" yaw="0"/>
+  <xacro:visual_part name="beam180" mesh_file="180beam.stl" x="0" y="0" z="0.05" yaw="1.5708"/>
+  <xacro:visual_part name="top_plate" mesh_file="top_plate.stl" x="0" y="0" z="0.1" yaw="0"/>
+
+  <!-- Motors and Propulsion -->
+  <xacro:macro name="motor" params="name x y index direction">
+    <link name="motor_${name}">
+      <visual>
+        <geometry>
+          <mesh filename="package://vectorsense_megacomplex/meshes/motor_attachment.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="motor_${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="motor_${name}"/>
+      <origin xyz="${x} ${y} 0.08" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <gazebo>
+      <plugin filename="gz-sim-multicopter-motor-model-system" name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>vectorsense</robotNamespace>
+        <jointName>motor_${name}_joint</jointName>
+        <linkName>motor_${name}</linkName>
+        <turningDirection>${direction}</turningDirection>
+        <timeConstantUp>0.0125</timeConstantUp>
+        <timeConstantDown>0.025</timeConstantDown>
+        <maxRotVelocity>1500</maxRotVelocity>
+        <motorConstant>8.54858e-06</motorConstant>
+        <momentConstant>0.016</momentConstant>
+        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <motorNumber>${index}</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:motor name="fr" x="0.25" y="-0.25" index="0" direction="ccw"/>
+  <xacro:motor name="fl" x="0.25" y="0.25" index="1" direction="cw"/>
+  <xacro:motor name="br" x="-0.25" y="-0.25" index="2" direction="cw"/>
+  <xacro:motor name="bl" x="-0.25" y="0.25" index="3" direction="ccw"/>
+
+  <gazebo>
+    <plugin filename="gz-sim-multicopter-velocity-control-system" name="gz::sim::systems::MulticopterVelocityControl">
+      <robotNamespace>vectorsense</robotNamespace>
+      <commandSubTopic>cmd_vel</commandSubTopic>
+      <enableAngleControl>true</enableAngleControl>
+      <enableVelocityControl>true</enableVelocityControl>
+      <maximumLinearVelocity>15.0</maximumLinearVelocity>
+      <maximumAngularVelocity>5.0</maximumAngularVelocity>
+    </plugin>
+  </gazebo>
+
+</robot>

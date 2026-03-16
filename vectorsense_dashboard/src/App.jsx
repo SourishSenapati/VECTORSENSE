@@ -1,23 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera, Environment } from '@react-three/drei';
-import { Activity, Zap, ShieldAlert, Cpu, Network } from 'lucide-react';
+import { Activity, Zap, Cpu } from 'lucide-react';
 import SpatialTwin from './components/SpatialTwin';
 import ThreatEconomics from './components/ThreatEconomics';
 import MitigationControl from './components/MitigationControl';
 import MissionControl from './components/MissionControl';
+import SystemDiagnostics from './components/SystemDiagnostics';
 import './App.css';
 
 function App() {
   const [telemetry, setTelemetry] = useState({
-    pos: [0, 5, 10], 
-    reality: { mass_loss: 0, status: "CORE_SYNC_OK", leak: false, mode: "GAS_TOMOGRAPHY" },
+    pos: [0, 5, 10],
+    reality: {
+      mass_loss: 0, status: "CORE_SYNC_OK", leak: false, mode: "GAS_TOMOGRAPHY",
+      sensor_precision: 99.98, physics_tflops: 12.4, worm_ledger: "INTEGRITY_OK"
+    },
     network: { digital_status: "CLOSED", digital_pressure: "1.0 atm", network_integrity: "SECURE" },
     cyber_physical_discrepancy: false,
-    alert_status: "NOMINAL"
+    alert_status: "NOMINAL",
+    telemetry_raw: "",
+    infrastructure_status: {}
   });
 
   const [wsStatus, setWsStatus] = useState("DISCONNECTED");
+  const [kinematicLoss, setKinematicLoss] = useState(false);
   const ws = useRef(null);
 
   useEffect(() => {
@@ -30,17 +37,23 @@ function App() {
       };
 
       ws.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.source === "DISCREPANCY_ENGINE") {
-          setTelemetry(current => ({
-            ...current,
-            reality: data.reality,
-            network: data.network,
-            cyber_physical_discrepancy: data.cyber_physical_discrepancy,
-            alert_status: data.alert_status,
-            pos: data.reality.pos || current.pos
-          }));
-        }
+        try {
+          const data = JSON.parse(event.data);
+          if (data.source === "DISCREPANCY_ENGINE") {
+            const isLoss = data.alert_status === "KINEMATIC_LOSS";
+            setKinematicLoss(isLoss);
+            setTelemetry(current => ({
+              ...current,
+              reality: data.reality,
+              network: data.network,
+              cyber_physical_discrepancy: data.cyber_physical_discrepancy,
+              alert_status: data.alert_status,
+              telemetry_raw: data.telemetry_raw,
+              infrastructure_status: data.infrastructure_status,
+              pos: isLoss ? current.pos : (data.reality?.pos ?? current.pos),
+            }));
+          }
+        } catch (parseErr) { console.warn("WS frame parse error:", parseErr); }
       };
     };
 
@@ -57,70 +70,85 @@ function App() {
   const isHacked = telemetry.cyber_physical_discrepancy;
 
   return (
-    <div className={`dashboard-container h-screen w-screen text-[#e0e0f0] overflow-hidden font-sans ${isHacked ? 'bg-red-950/20' : 'bg-[#050510]'}`}>
+    <div className={`h-screen w-screen overflow-hidden ${isHacked ? 'bg-red-950/10' : ''}`}>
       
-      {/* Cyber Alert Overlay */}
-      {isHacked && (
-        <div className="absolute inset-0 z-[100] pointer-events-none flex flex-col items-center justify-center bg-red-900/10 backdrop-blur-[2px] animate-pulse">
-          <div className="border-4 border-red-500 p-8 bg-black/90 text-red-500 max-w-2xl transform -skew-x-12 shadow-[0_0_50px_rgba(239,68,68,0.5)]">
-            <h2 className="text-6xl font-black tracking-tighter uppercase italic mb-4 flex items-center gap-4">
-              <ShieldAlert size={64}/> SCADA_SPOOFING
-            </h2>
-            <p className="text-xl font-mono tracking-widest text-white mb-6 uppercase">Physical reality mismatches digital telemetry</p>
-          </div>
-        </div>
-      )}
-
-      {/* Header Bar */}
-      <header className={`absolute top-0 w-full z-50 p-6 flex justify-between items-center transition-all duration-500 ${isHacked ? 'border-b-2 border-red-500 bg-red-900/10' : 'bg-black/50'}`}>
-        <div className="flex items-center gap-4">
-          <div className={`h-12 w-12 flex items-center justify-center font-bold text-xl rounded-sm transition-all duration-500 ${isHacked ? 'bg-red-600' : 'bg-blue-600'}`}>VS</div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tighter uppercase italic text-white/90">
-              VectorSense // General Purpose Suite
-            </h1>
-            <div className="flex items-center gap-2 text-[10px] tracking-widest font-mono uppercase">
-              <span className={`h-2 w-2 rounded-full ${wsStatus === 'CONNECTED' ? 'bg-green-500' : 'bg-red-500'}`} />
-              CORE_BRAIN: {wsStatus} // MISSION: {telemetry.reality.mode}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-8">
-          <StatBox icon={<Network size={16}/>} label="CYBER_NETWORK" value={telemetry.network.network_integrity} color={isHacked ? "text-red-500" : "text-blue-400"} />
-          <StatBox icon={<Cpu size={16}/>} label="ADAPTIVE_BRAIN" value={telemetry.reality.mode} color="text-green-400" />
-        </div>
-      </header>
-
-      {/* Phase 3: Mission Control Panel */}
-      <MissionControl currentMode={telemetry.reality.mode} onModeChange={handleModeChange} />
-
-      {/* Main 3D Viewport */}
+      {/* 1. LAYER 0: THE SPATIAL TWIN (BACKGROUND) */}
       <div className="absolute inset-0 z-0">
         <Canvas shadows dpr={[1, 2]}>
           <PerspectiveCamera makeDefault position={[20, 10, 20]} fov={50} />
           <OrbitControls target={[0, 5, 0]} maxPolarAngle={Math.PI / 2.1} />
           <color attach="background" args={['#020205']} />
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-          <SpatialTwin pos={telemetry.pos} reality={telemetry.reality} />
+          <SpatialTwin pos={telemetry.pos} reality={telemetry.reality} frozen={kinematicLoss} />
           <Environment preset="night" />
         </Canvas>
       </div>
 
-      <ThreatEconomics massFlux={telemetry.reality.mass_loss || 0} activeTime={0} gasType="Hydrocarbon" />
-      <MitigationControl valveState={isHacked ? "SPOOFED" : (telemetry.network.digital_status || "CLOSED")} />
+      {/* 2. LAYER 1: GLASS NAV & STATS */}
+      <header className={`absolute top-6 left-6 right-6 z-50 liquid-glass p-4 flex justify-between items-center transition-all duration-700 ${isHacked ? 'border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.2)]' : ''}`}>
+        <div className="flex items-center gap-6">
+          <div className={`h-10 w-10 flex items-center justify-center font-bold text-lg rounded-xl liquid-glass-soft transition-colors duration-500 ${isHacked ? 'text-red-500' : 'text-emerald-400'}`}>VS</div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white/90">VectorSense <span className="text-white/30 font-light mx-2">|</span> <span className="mono text-xs text-white/50">PHYSICS_TWIN_V4.0</span></h1>
+            <div className="flex items-center gap-3 text-[10px] mono uppercase mt-1">
+              <span className={`h-1.5 w-1.5 rounded-full ${wsStatus === 'CONNECTED' ? 'bg-emerald-400 accent-glow' : 'bg-rose-500 animate-pulse'}`} />
+              <span className="text-white/40">Status:</span> <span className={wsStatus === 'CONNECTED' ? 'text-emerald-400' : 'text-rose-500'}>{wsStatus}</span>
+              <span className="text-white/40 ml-2">Kernel:</span> <span className="text-emerald-400/70">ASYNC_PINN_OK</span>
+            </div>
+          </div>
+        </div>
 
-      {/* Aesthetic Scanlines */}
-      <div className="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-[200]" style={{backgroundSize: '100% 2px, 3px 100%'}} />
+        <div className="flex gap-10 pr-4">
+          <StatBox icon={<Activity size={14}/>} label="PRECISION" value={`${(telemetry.reality.sensor_precision || 99.98).toFixed(2)}%`} color="text-emerald-400" />
+          <StatBox icon={<Zap size={14}/>} label="THROUGHPUT" value={`${(telemetry.reality.physics_tflops || 12.4).toFixed(1)}T`} color="text-cyan-400" />
+          <StatBox icon={<Cpu size={14}/>} label="ADAPTIVE" value={telemetry.reality.mode} color="text-white/80" />
+        </div>
+      </header>
+
+      {/* 3. LAYER 2: INTERACTIVE MODULES */}
+      <div className="absolute top-32 right-6 z-40 flex flex-col gap-6 w-80">
+        <div className="liquid-glass p-5">
+           <MissionControl currentMode={telemetry.reality.mode} onModeChange={handleModeChange} />
+        </div>
+        <div className="liquid-glass p-5">
+           <ThreatEconomics massFlux={telemetry.reality.mass_loss || 0} activeTime={0} gasType="Hydrocarbon" />
+        </div>
+        <div className="liquid-glass p-5">
+           <MitigationControl valveState={isHacked ? "SPOOFED" : (telemetry.network.digital_status || "CLOSED")} />
+        </div>
+      </div>
+
+      {/* 4. LAYER 3: PERSISTENT DIAGNOSTICS */}
+      <SystemDiagnostics 
+        telemetryRaw={telemetry.telemetry_raw} 
+        infraStatus={telemetry.infrastructure_status} 
+      />
+
+      {/* 5. ALERTS & OVERLAYS */}
+      {kinematicLoss && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-xl">
+          <div className="liquid-glass p-10 border-yellow-500/50 max-w-2xl text-center">
+            <h2 className="text-4xl font-black text-yellow-500 mb-4 tracking-tighter uppercase">ERR_0x04: KINEMATIC_TIMEOUT</h2>
+            <p className="mono text-yellow-200/60 text-sm mb-6 uppercase tracking-widest">WSL Physics engine link broken. Drone state is stale.</p>
+            <div className="liquid-glass-soft p-4 rounded-lg mono text-xs text-left">
+              $ ros2 launch vectorsense_drone_sim full_demo.launch.py
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isHacked && !kinematicLoss && (
+        <div className="absolute inset-0 z-[150] pointer-events-none bg-red-950/20 backdrop-blur-[1px] animate-pulse" />
+      )}
     </div>
   );
 }
 
 function StatBox({ icon, label, value, color }) {
   return (
-    <div className="flex flex-col items-end">
-      <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-1">{icon} {label}</div>
-      <div className={`text-lg font-black tracking-tight ${color}`}>{value}</div>
+    <div className="flex flex-col items-start min-w-[100px]">
+      <div className="text-[10px] mono text-white/30 uppercase tracking-widest flex items-center gap-1.5 mb-1">{icon} {label}</div>
+      <div className={`text-sm font-bold tracking-tight ${color}`}>{value}</div>
     </div>
   );
 }

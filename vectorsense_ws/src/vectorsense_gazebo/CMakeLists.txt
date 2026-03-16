@@ -1,41 +1,56 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 project(vectorsense_gazebo)
 
-# Directive 2.3: Gazebo Sim (Harmonic) Integration via Ament.
+# Require C++17 for Gazebo Harmonic (gz-sim8)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 find_package(ament_cmake REQUIRED)
 
-# Force ZeroMQ discovery via PkgConfig
+# ZeroMQ — available system-wide on Ubuntu 24.04
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(ZMQ REQUIRED libzmq cppzmq)
+pkg_check_modules(ZMQ REQUIRED libzmq)
 
-find_package(gz-sim8 REQUIRED)
+# Gazebo Harmonic (gz-sim8) vendor packages — ROS Jazzy
+# These are found via CMAKE_PREFIX_PATH set by /opt/ros/jazzy/setup.bash
+find_package(gz-sim8       REQUIRED)
 find_package(gz-transport13 REQUIRED)
-find_package(gz-math7 REQUIRED)
-find_package(gz-plugin2 REQUIRED)
-find_package(nlohmann_json 3.2.0 REQUIRED)
+find_package(gz-math7      REQUIRED)
+find_package(gz-plugin2    REQUIRED COMPONENTS register)
+find_package(nlohmann_json REQUIRED)
 
-add_library(GasLeakPlugin SHARED src/GasLeakPlugin.cpp)
-
-# Use target_link_libraries PLAIN signature because ament_target_dependencies uses it
-target_include_directories(GasLeakPlugin PRIVATE ${ZMQ_INCLUDE_DIRS})
-
-ament_target_dependencies(GasLeakPlugin
-    gz-sim8
-    gz-transport13
-    gz-math7
-    gz-plugin2
-    nlohmann_json
+# ── GasLeakPlugin shared library ──────────────────────────────────────────────
+add_library(GasLeakPlugin SHARED
+  src/GasLeakPlugin.cpp
 )
-target_link_libraries(GasLeakPlugin ${ZMQ_LIBRARIES})
 
-# Install Gazebo Plugin
+target_include_directories(GasLeakPlugin PRIVATE
+  ${ZMQ_INCLUDE_DIRS}
+)
+
+target_link_libraries(GasLeakPlugin
+  gz-sim8::gz-sim8
+  gz-transport13::gz-transport13
+  gz-math7::gz-math7
+  gz-plugin2::gz-plugin2
+  gz-plugin2::register
+  nlohmann_json::nlohmann_json
+  ${ZMQ_LIBRARIES}
+)
+
+# ── Install ───────────────────────────────────────────────────────────────────
 install(TARGETS GasLeakPlugin
-    DESTINATION lib/${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install Launch files and Worlds
 install(DIRECTORY launch worlds
-    DESTINATION share/${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}
+  OPTIONAL
 )
 
 ament_package()

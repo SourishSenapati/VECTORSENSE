@@ -1,0 +1,15 @@
+# clangd configuration for vectorsense_gazebo
+# This package targets Linux (ROS Jazzy + Gazebo Harmonic). Gazebo/ZMQ headers
+# are not available on Windows. The ide_stubs/ directory provides minimal header
+# stubs so clangd can parse the code without false-positive "file not found" errors.
+# The stubs are ignored by colcon/cmake (ide_stubs/ is not in CMakeLists.txt).
+
+CompileFlags:
+  Add:
+    - "-Id:\\PROJECT\\ROBOTICS\\VECTORSENSE\\vectorsense_ws\\src\\vectorsense_gazebo\\ide_stubs"
+    - "-std=c++17"
+    - "-Wno-unused-includes"
+
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
