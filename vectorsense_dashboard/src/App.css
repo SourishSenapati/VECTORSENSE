@@ -1,1 +1,138 @@
-/* Cleared for Liquid Glass Industrial Theme */
+:root {
+  --bg-color: #050510;
+  --panel-bg: rgba(0, 0, 0, 0.85);
+  --cyan-accent: #00ffff;
+  --cyan-glow: rgba(0, 255, 255, 0.2);
+  --red-alert: #ff4d4d;
+  --grid-line: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html, #root {
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-color);
+  color: white;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+}
+
+.hud-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: var(--panel-bg);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  pointer-events: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.logo-box {
+  height: 60px;
+  width: 60px;
+  border: 2px solid var(--cyan-accent);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 24px;
+  color: var(--cyan-accent);
+}
+
+.status-pill {
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 2px solid var(--cyan-accent);
+  color: var(--cyan-accent);
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.status-pill.alert {
+  border-color: var(--red-alert);
+  color: var(--red-alert);
+  background: rgba(255, 77, 77, 0.1);
+}
+
+/* Main Content Area */
+.main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.left-panel, .right-panel {
+  width: 380px;
+  pointer-events: auto;
+}
+
+/* Diagnostics Area */
+.bottom-bar {
+  display: flex;
+  gap: 20px;
+}
+
+/* Liquid Glass Implementation */
+.liquid-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.mono {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Animations */
+@keyframes pulse-cyan {
+  0% { box-shadow: 0 0 10px var(--cyan-glow); }
+  50% { box-shadow: 0 0 30px var(--cyan-accent); }
+  100% { box-shadow: 0 0 10px var(--cyan-glow); }
+}
+
+.pulse {
+  animation: pulse-cyan 2s infinite;
+}

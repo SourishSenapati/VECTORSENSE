@@ -1,31 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;600;800&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Cleaned for pure CSS VectorSense Dashboard */
 
 :root {
   --glass-bg: rgba(15, 15, 25, 0.7);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-accent: rgba(0, 255, 180, 0.2);
-  --industrial-blue: #0a0a1f;
+  --industrial-blue: #050510;
   --accent-neon: #00ffb4;
   --text-primary: rgba(255, 255, 255, 0.95);
   --text-secondary: rgba(255, 255, 255, 0.5);
   
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
-  background: radial-gradient(circle at 50% 50%, #151525 0%, #050510 100%);
+  background: #050510;
   color: var(--text-primary);
   min-height: 100vh;
   overflow: hidden;
@@ -37,74 +33,14 @@ body {
   position: relative;
 }
 
-/* Liquid Glass Component */
+.mono {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
 .liquid-glass {
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   border-radius: 20px;
-}
-
-.liquid-glass-soft {
-  background: rgba(255, 255, 255, 0.03);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Industrial Typography */
-h1, h2, h3 {
-  font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.02em;
-}
-
-.mono {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-}
-
-/* Floating Depth */
-.depth-1 { transform: translateZ(10px); }
-.depth-2 { transform: translateZ(30px); }
-
-/* Custom Animations */
-@keyframes pulse-accent {
-  0% { box-shadow: 0 0 0 0 rgba(0, 255, 180, 0.4); }
-  70% { box-shadow: 0 0 8px 10px rgba(0, 255, 180, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 255, 180, 0); }
-}
-
-.accent-glow {
-  animation: pulse-accent 2s infinite;
-}
-
-/* Scrollbar Refinement */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Layout Utilities */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  grid-template-rows: 80px 1fr 200px;
-  gap: 20px;
-  padding: 24px;
-  height: 100vh;
 }

@@ -1,38 +1,46 @@
 import React from 'react';
-import { Camera, Wind, Volume2, Shield } from 'lucide-react';
 
-const MissionControl = ({ currentMode, onModeChange }) => {
+const MissionControl = ({ mode, onModeChange }) => {
   const modes = [
-    { id: 'GAS_TOMOGRAPHY', label: 'GAS LEAK DETECT', icon: <Wind size={18}/>, color: 'hover:bg-red-600', active: 'bg-red-600' },
-    { id: 'THERMAL_PROFILING', label: 'THERMAL SCAN', icon: <Camera size={18}/>, color: 'hover:bg-orange-600', active: 'bg-orange-600' },
-    { id: 'ACOUSTIC_DIAGNOSTICS', label: 'ACOUSTIC INSPECT', icon: <Volume2 size={18}/>, color: 'hover:bg-cyan-600', active: 'bg-cyan-600' },
+    { id: 'GAS_TOMOGRAPHY', label: 'GAS LEAK DETECT', color: '#ff4d4d' },
+    { id: 'THERMAL_PROFILING', label: 'THERMAL SCAN', color: '#ff9900' },
+    { id: 'ACOUSTIC_DIAGNOSTICS', label: 'ACOUSTIC INSPECTOR', color: '#00ffff' },
   ];
 
+  const panelStyle = {
+    background: 'rgba(0,0,0,0.7)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '16px',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  };
+
   return (
-    <div className="absolute left-6 top-32 z-50 flex flex-col gap-4">
-      <div className="bg-black/60 backdrop-blur-md border border-white/10 p-2 flex flex-col gap-2 rounded-sm">
-        <div className="text-[10px] font-black tracking-[0.3em] text-white/40 mb-2 px-2">MISSION_CONTROL</div>
-        {modes.map((mode) => (
+    <div style={panelStyle}>
+        <div className="mono" style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px' }}>MISSION_CONTROL</div>
+        {modes.map((m) => (
           <button
-            key={mode.id}
-            onClick={() => onModeChange(mode.id)}
-            className={`flex items-center gap-3 px-4 py-3 text-xs font-bold tracking-tighter uppercase transition-all duration-300 border border-white/5 ${
-              currentMode === mode.id ? mode.active : `bg-white/5 ${mode.color}`
-            }`}
+            key={m.id}
+            onClick={() => onModeChange(m.id)}
+            style={{
+              padding: '16px',
+              background: mode === m.id ? m.color : 'rgba(255,255,255,0.05)',
+              border: 'none',
+              borderRadius: '8px',
+              color: mode === m.id ? 'black' : 'white',
+              fontSize: '11px',
+              fontWeight: '900',
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'all 0.3s'
+            }}
           >
-            {mode.icon}
-            {mode.label}
-            {currentMode === mode.id && <span className="ml-auto animate-pulse">●</span>}
+            {m.label}
           </button>
         ))}
-      </div>
-
-      <div className="bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-sm">
-        <div className="text-[10px] font-black tracking-[0.3em] text-white/40 mb-3">SQUAD_COMMAND</div>
-        <button className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-2 text-[10px] font-bold tracking-widest uppercase text-blue-400">
-          <Shield size={12}/> ACTIVATE_QUARANTINE
-        </button>
-      </div>
     </div>
   );
 };
