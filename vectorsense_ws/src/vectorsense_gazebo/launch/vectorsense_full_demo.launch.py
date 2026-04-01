@@ -9,13 +9,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Directive 1.1: Master Simulation Infrastructure
     pkg_vectorsense_gazebo = get_package_share_directory('vectorsense_gazebo')
-    pkg_vectorsense_description = get_package_share_directory('vectorsense_description')
+    pkg_vectorsense_drone_sim = get_package_share_directory('vectorsense_drone_sim')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
-    # Path to high-fidelity URDF
-    urdf_file = os.path.join(pkg_vectorsense_description, 'urdf', 'drone_high_fidelity.urdf')
-    with open(urdf_file, 'r') as infp:
-        robot_desc = infp.read()
+    # Path to high-fidelity URDF (Dynamically via XACRO)
+    import subprocess
+    xacro_file = os.path.join(pkg_vectorsense_drone_sim, 'urdf', 'vectorsense.urdf.xacro')
+    robot_desc = subprocess.check_output(['xacro', xacro_file]).decode('utf-8')
 
     # World configuration
     world_file = os.path.join(pkg_vectorsense_gazebo, 'worlds', 'refinery_hazard.sdf')

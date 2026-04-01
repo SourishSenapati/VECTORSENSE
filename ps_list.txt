@@ -1,0 +1,54 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.1  21804 13000 ?        Ss   02:59   0:01 /sbin/init
+root           2  0.0  0.0   2776  1924 ?        Sl   02:59   0:00 /init
+root           7  0.0  0.0   2776   132 ?        Sl   02:59   0:00 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate
+root          53  0.0  0.1  66832 15864 ?        S<s  02:59   0:00 /usr/lib/systemd/systemd-journald
+root          98  0.0  0.0  25124  6868 ?        Ss   02:59   0:01 /usr/lib/systemd/systemd-udevd
+systemd+     164  0.0  0.1  21460 12132 ?        Ss   02:59   0:00 /usr/lib/systemd/systemd-resolved
+systemd+     169  0.0  0.0  91052  6772 ?        Ssl  02:59   0:00 /usr/lib/systemd/systemd-timesyncd
+avahi        188  0.0  0.0   8688  4116 ?        Ss   02:59   0:00 avahi-daemon: running [DESKTOP-ENT00HF-2.local]
+root         189  0.0  0.0   7148  2916 ?        Ss   02:59   0:00 /usr/sbin/cron -f -P
+message+     190  0.0  0.0   9764  5276 ?        Ss   02:59   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         194  0.0  0.1 1025424 14352 ?       Ssl  02:59   0:00 /usr/bin/lttng-sessiond
+polkitd      195  0.0  0.0 308164  7736 ?        Ssl  02:59   0:00 /usr/lib/polkit-1/polkitd --no-debug
+root         199  0.0  0.0  17984  8324 ?        Ss   02:59   0:00 /usr/lib/systemd/systemd-logind
+avahi        205  0.0  0.0   8424   356 ?        S    02:59   0:00 avahi-daemon: chroot helper
+root         206  0.0  0.0  49568  2208 ?        S    02:59   0:00 /usr/bin/lttng-sessiond
+root         207  0.0  0.0  17384  5760 ?        Ss   02:59   0:00 /usr/sbin/wpa_supplicant -u -s -O DIR=/run/wpa_supplicant GROUP=netdev
+syslog       215  0.0  0.0 222508  5156 ?        Ssl  02:59   0:00 /usr/sbin/rsyslogd -n -iNONE
+root         241  0.0  0.0   6044  1104 hvc0     Ss+  02:59   0:00 /sbin/agetty -o -p -- \u --noclear --keep-baud - 115200,38400,9600 vt220
+root         244  0.0  0.0   6428  1148 tty1     Ss+  02:59   0:00 /sbin/agetty -o -p -- \u --noclear - linux
+root         252  0.0  0.1 110008 22888 ?        Ssl  02:59   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root         353  0.0  0.0   6824  4832 pts/1    Ss   02:59   0:00 /bin/login -f
+sourish      398  0.0  0.0  20280 11464 ?        Ss   02:59   0:00 /usr/lib/systemd/systemd --user
+sourish      399  0.0  0.0  21160  1728 ?        S    02:59   0:00 (sd-pam)
+sourish      410  0.0  0.0   9196  5680 pts/1    S+   02:59   0:00 -bash
+sourish      619  0.0  0.0   9292  4620 ?        Ss   03:00   0:00 /usr/bin/dbus-daemon --session --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root        1069  0.0  0.0   2804   208 ?        Ss   03:24   0:00 /init
+root        1070  0.0  0.0   2804   220 ?        S    03:24   0:00 /init
+sourish     1072  0.0  0.0   9328  5832 pts/0    Ss+  03:24   0:00 -bash
+root        1123  0.0  0.0   2804   208 ?        Ss   03:27   0:00 /init
+root        1124  0.0  0.0   2804   220 ?        S    03:27   0:01 /init
+sourish     1127  0.0  0.0   7664  3556 pts/3    Ss+  03:27   0:00 bash -c killall -u d -9 python3 websockify x11vnc Xvfb ros2 gz sim 2>/dev/null; killall -9 python3 websockify x11vnc Xvfb ros2 gz sim 2>/dev/null; sleep 1; cd /mnt/d/PROJECT/ROBOTICS/VECTORSENSE && ./launch_sim.sh
+sourish     1137  0.0  0.0   7928  3888 pts/3    S+   03:27   0:00 /bin/bash ./launch_sim.sh
+sourish     1140  0.0  0.5 220852 69140 pts/3    S+   03:27   0:02 Xvfb :99 -screen 0 1280x1024x24 -nolisten unix
+sourish     1144  0.1  0.1  42100 15972 pts/3    S+   03:27   0:04 x11vnc -display :99 -forever -nopw -listen localhost
+sourish     1146  0.0  0.3  62084 38396 pts/3    S+   03:27   0:00 /usr/bin/python3 /usr/bin/websockify --web /usr/share/novnc 6080 localhost:5900
+sourish     1166  0.1  0.3 204368 44072 pts/3    Sl+  03:27   0:03 /usr/bin/python3 /opt/ros/jazzy/bin/ros2 launch vectorsense_gazebo vectorsense_full_demo.launch.py
+sourish     1171  0.2  0.1 110784 21004 pts/3    Sl+  03:27   0:05 python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/physics_engine_pinn.py
+sourish     1177  0.1  0.3 748244 35508 pts/3    Sl+  03:27   0:02 /opt/ros/jazzy/lib/robot_state_publisher/robot_state_publisher --ros-args -r __node:=robot_state_publisher --params-file /tmp/launch_params_irkd190y
+sourish     1178  0.8  0.3 1067324 40112 pts/3   Sl+  03:27   0:25 /opt/ros/jazzy/lib/ros_gz_sim/create -name vectorsense_drone -topic robot_description -x -15.0 -y 5.0 -z 0.5 --ros-args
+sourish     1179  1.4  0.4 1154820 57664 pts/3   Sl+  03:27   0:41 /opt/ros/jazzy/lib/ros_gz_bridge/parameter_bridge /cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist /odom@nav_msgs/msg/Odometry@gz.msgs.Odometry /world/refinery_hazard/model/vectorsense_drone/joint_state@sensor_msgs/msg/JointState@gz.msgs.Model /tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V --ros-args
+sourish     1326  2.4  0.2 125588 31840 pts/3    Sl+  03:27   1:10 python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/financial_physics_bridge.py
+sourish     1330  0.1  0.1 110168 20796 pts/3    Sl+  03:27   0:03 python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/scada_network_sim.py
+sourish     1334  4.5  0.6 895136 76152 pts/3    Sl+  03:27   2:10 python3 /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/vectorsense_ws/src/vectorsense_intelligence/scripts/apf_flight_controller.py
+root        1387  0.0  0.0   2784   216 ?        S    03:32   0:00 /init
+sourish     1395  0.0  0.0  41468 10276 ?        Ss   03:32   0:01 x11vnc -display :99 -nopw -listen localhost -bg
+sourish     1811  0.0  0.2  62272 30184 pts/3    S+   04:07   0:00 /usr/bin/python3 /usr/bin/websockify --web /usr/share/novnc 6080 localhost:5900
+root        1903  0.0  0.0  25128  4080 ?        S    04:15   0:00 (udev-worker)
+root        1904  0.0  0.0  25128  4016 ?        S    04:15   0:00 (udev-worker)
+root        1905  0.0  0.0   2804   208 ?        Ss   04:15   0:00 /init
+root        1906  0.0  0.0   2804   220 ?        S    04:15   0:00 /init
+root        1907  0.0  0.0  25128  4016 ?        S    04:15   0:00 (udev-worker)
+sourish     1908 50.0  0.0   7664  3536 pts/2    Ss+  04:15   0:00 bash -c ps aux > /mnt/d/PROJECT/ROBOTICS/VECTORSENSE/ps_list.txt
+sourish     1909  100  0.0  11352  4412 pts/2    R+   04:15   0:00 ps aux

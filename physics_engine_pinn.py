@@ -37,7 +37,7 @@ else:
 # Constants
 _WSL_FEED = "tcp://localhost:5555"
 _WIN_OUT = "tcp://127.0.0.1:5556"
-_LEAK_ORG = (12.5, 4.2, 15.0)
+_LEAK_ORG = (17.5, -8.0, 12.0) # Column B2 Flange
 _NU: float = 1.516e-5
 
 def _ns_residual_torch(pos: list[float], vel: list[float], dt: float,
@@ -109,7 +109,17 @@ class PINNPipeline:
 
             # Distal analysis for leak detection
             dist = math.sqrt(sum((a-b)**2 for a,b in zip(pos, _LEAK_ORG)))
-            leak = dist < 2.5
+            leak_detected = dist < 2.5
+            
+            # MISSION ADVISORY (Industrial Intelligence Layer)
+            advisory = ""
+            if leak_detected:
+                if physics["ns_residual"] > 1e-4:
+                    advisory = "CRITICAL LEAK: High-pressure methane breach detected. High-turbulence plume profile. RECOMMENDATION: DEPRESSURIZE STACK-B2 IMMEDIATELY."
+                else:
+                    advisory = "STABLE LEAK: Minor containment breach. Low advection observed. RECOMMENDATION: INITIATE VALVE LOCK AT SECTOR 4."
+            else:
+                advisory = "NOMINAL: No physical anomalies detected in current sensing volume."
 
             output = {
                 "source": "PINN_KERNEL",
@@ -117,7 +127,10 @@ class PINNPipeline:
                 "pos": pos,
                 "quat": frame.get("quat", [0, 0, 0, 1]),
                 "ns_residual": physics["ns_residual"],
-                "leak": leak,
+                "leak": leak_detected,
+                "sensors": frame.get("sensors", {}),
+                "advisory": advisory,
+                "state": frame.get("state", "UNKNOWN"),
                 "status": "CORE_SYNC_OK",
                 "frame_idx": self._frame_count,
             }

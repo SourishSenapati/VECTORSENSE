@@ -1,0 +1,59 @@
+Netid State  Recv-Q Send-Q  Local Address:Port  Peer Address:PortProcess                                   
+udp   UNCONN 0      0          127.0.0.54:53         0.0.0.0:*                                             
+udp   UNCONN 0      0       127.0.0.53%lo:53         0.0.0.0:*                                             
+udp   UNCONN 0      0      10.255.255.254:53         0.0.0.0:*                                             
+udp   UNCONN 0      0           127.0.0.1:323        0.0.0.0:*                                             
+udp   UNCONN 0      0      10.255.255.254:50519      0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=39))
+udp   UNCONN 0      0       172.17.12.235:59080      0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=40))
+udp   UNCONN 0      0      10.255.255.254:42801      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=39))
+udp   UNCONN 0      0             0.0.0.0:59200      0.0.0.0:*    users:(("create",pid=485,fd=38))         
+udp   UNCONN 0      0             0.0.0.0:10317      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=55))
+udp   UNCONN 0      0             0.0.0.0:10317      0.0.0.0:*    users:(("create",pid=485,fd=55))         
+udp   UNCONN 0      0             0.0.0.0:10318      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=58))
+udp   UNCONN 0      0             0.0.0.0:10318      0.0.0.0:*    users:(("create",pid=485,fd=58))         
+udp   UNCONN 0      0             0.0.0.0:51399      0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=38))
+udp   UNCONN 0      0      10.255.255.254:35576      0.0.0.0:*    users:(("create",pid=485,fd=39))         
+udp   UNCONN 0      0       172.17.12.235:60680      0.0.0.0:*    users:(("python3",pid=647,fd=40))        
+udp   UNCONN 0      0             0.0.0.0:44795      0.0.0.0:*                                             
+udp   UNCONN 0      0       172.17.12.235:37133      0.0.0.0:*    users:(("create",pid=485,fd=40))         
+udp   UNCONN 0      0       172.17.12.235:45489      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=40))
+udp   UNCONN 0      0             0.0.0.0:37644      0.0.0.0:*    users:(("python3",pid=647,fd=38))        
+udp   UNCONN 0      0             0.0.0.0:5353       0.0.0.0:*                                             
+udp   UNCONN 0      0             0.0.0.0:55717      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=38))
+udp   UNCONN 0      0             0.0.0.0:7000       0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=42))
+udp   UNCONN 0      0             0.0.0.0:7001       0.0.0.0:*    users:(("create",pid=485,fd=43))         
+udp   UNCONN 0      0             0.0.0.0:7002       0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=42))
+udp   UNCONN 0      0             0.0.0.0:7003       0.0.0.0:*    users:(("python3",pid=647,fd=42))        
+udp   UNCONN 0      0      10.255.255.254:56482      0.0.0.0:*    users:(("python3",pid=647,fd=39))        
+udp   UNCONN 0      0             0.0.0.0:7400       0.0.0.0:*    users:(("python3",pid=647,fd=35))        
+udp   UNCONN 0      0             0.0.0.0:7400       0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=35))
+udp   UNCONN 0      0             0.0.0.0:7400       0.0.0.0:*    users:(("create",pid=485,fd=35))         
+udp   UNCONN 0      0             0.0.0.0:7400       0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=35))
+udp   UNCONN 0      0             0.0.0.0:7410       0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=34))
+udp   UNCONN 0      0             0.0.0.0:7411       0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=37))
+udp   UNCONN 0      0             0.0.0.0:7412       0.0.0.0:*    users:(("create",pid=485,fd=34))         
+udp   UNCONN 0      0             0.0.0.0:7413       0.0.0.0:*    users:(("create",pid=485,fd=37))         
+udp   UNCONN 0      0             0.0.0.0:7414       0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=34))
+udp   UNCONN 0      0             0.0.0.0:7415       0.0.0.0:*    users:(("robot_state_pub",pid=483,fd=37))
+udp   UNCONN 0      0             0.0.0.0:7416       0.0.0.0:*    users:(("python3",pid=647,fd=34))        
+udp   UNCONN 0      0             0.0.0.0:7417       0.0.0.0:*    users:(("python3",pid=647,fd=37))        
+udp   UNCONN 0      0               [::1]:323           [::]:*                                             
+udp   UNCONN 0      0                [::]:5353          [::]:*                                             
+udp   UNCONN 0      0                [::]:48642         [::]:*                                             
+tcp   LISTEN 0      4096    127.0.0.53%lo:53         0.0.0.0:*                                             
+tcp   LISTEN 0      100           0.0.0.0:6080       0.0.0.0:*    users:(("websockify",pid=448,fd=3))      
+tcp   LISTEN 0      100     172.17.12.235:41871      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=61))
+tcp   LISTEN 0      100     172.17.12.235:41481      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=60))
+tcp   LISTEN 0      100           0.0.0.0:5557       0.0.0.0:*    users:(("python3",pid=642,fd=9))         
+tcp   LISTEN 0      100           0.0.0.0:5558       0.0.0.0:*    users:(("python3",pid=636,fd=12))        
+tcp   LISTEN 0      1000   10.255.255.254:53         0.0.0.0:*                                             
+tcp   LISTEN 0      100           0.0.0.0:8000       0.0.0.0:*    users:(("python3",pid=636,fd=16))        
+tcp   LISTEN 0      100     172.17.12.235:43015      0.0.0.0:*    users:(("create",pid=485,fd=61))         
+tcp   LISTEN 0      64          127.0.0.1:5345       0.0.0.0:*                                             
+tcp   LISTEN 0      4096       127.0.0.54:53         0.0.0.0:*                                             
+tcp   LISTEN 0      100         127.0.0.1:5556       0.0.0.0:*    users:(("python3",pid=475,fd=11))        
+tcp   LISTEN 0      100     172.17.12.235:44677      0.0.0.0:*    users:(("create",pid=485,fd=60))         
+tcp   LISTEN 0      100     172.17.12.235:36995      0.0.0.0:*    users:(("create",pid=485,fd=59))         
+tcp   LISTEN 0      4096          0.0.0.0:22         0.0.0.0:*                                             
+tcp   LISTEN 0      100     172.17.12.235:46811      0.0.0.0:*    users:(("parameter_bridg",pid=486,fd=59))
+tcp   LISTEN 0      4096             [::]:22            [::]:*                                             

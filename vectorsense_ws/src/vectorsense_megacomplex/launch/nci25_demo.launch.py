@@ -67,15 +67,24 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
+            '/vectorsense/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
             '/model/vectorsense_drone/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            '/vectorsense/mission_state@std_msgs/msg/String[gz.msgs.StringMsg',
         ],
         remappings=[
             ('/model/vectorsense_drone/odometry', '/odom'),
         ],
         output='screen',
+    )
+
+    # Autonomous Mission Controller
+    mission_controller = Node(
+        package='vectorsense_megacomplex',
+        executable='black_swan_demo',
+        parameters=[{'use_sim_time': True}],
+        output='screen'
     )
 
     # ZMQ Telemetry Bridge (WSL -> Windows)
@@ -86,18 +95,11 @@ def generate_launch_description():
         output='screen'
     )
 
-    # CUDA Controller
-    cuda_controller = Node(
-        package='vectorsense_megacomplex',
-        executable='cuda_patrol_node',
-        output='screen'
-    )
-
     return LaunchDescription([
         gazebo,
         robot_state_publisher,
         spawn,
         bridge,
         zmq_bridge,
-        cuda_controller
+        mission_controller,
     ])

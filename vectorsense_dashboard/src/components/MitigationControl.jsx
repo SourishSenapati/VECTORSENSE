@@ -1,60 +1,76 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 
-const MitigationControl = () => {
-  const panelStyle = {
-    background: 'rgba(0,0,0,0.7)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '16px',
-    padding: '24px',
-    width: '380px'
-  };
+const COMMANDS = [
+  { id: 'VALVE_LOCK',   label: 'Valve Lock',      desc: 'Seal all upstream flow valves' },
+  { id: 'PURGE_GAS',   label: 'Purge Gas Line',   desc: 'Flush pipeline with inert nitrogen' },
+  { id: 'DEPRESSURIZE', label: 'Depressurize',     desc: 'Bleed system to atmospheric pressure' },
+  { id: 'SHUTDOWN',    label: 'Emergency Shutdown', desc: 'Full-plant SCADA shutdown sequence' },
+];
 
-  const statusStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '16px',
-    padding: '16px',
-    background: 'rgba(255,255,255,0.05)',
-    borderRadius: '8px'
-  };
+const ValveStatus = ({ state }) => {
+  const color = state === 'LOCKED' ? 'var(--danger)' : state === 'CLOSED' ? 'var(--warning)' : 'var(--success)';
+  return (
+    <div className="item-row" style={{ marginBottom: 14 }}>
+      <span className="key">Line Status</span>
+      <span className="value" style={{ color, fontSize: 11, fontWeight: 700 }}>
+        {state || 'OPEN'}
+      </span>
+    </div>
+  );
+};
+
+const MitigationControl = ({ valveState, onCommand }) => {
+  const [armed, setArmed] = useState(null);
+  const [sent, setSent]   = useState(null);
+  const armTimers = {};
+
+  const handleClick = useCallback((id) => {
+    if (armed === id) {
+      onCommand(id);
+      setSent(id);
+      setArmed(null);
+      clearTimeout(armTimers[id]);
+    } else {
+      setArmed(id);
+      armTimers[id] = setTimeout(() => setArmed(null), 3000);
+    }
+  }, [armed, onCommand]);
 
   return (
-    <div style={panelStyle}>
-        <div className="mono" style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '16px' }}>SYSTEMS CONTROL</div>
-        
-        <div style={statusStyle}>
-            <div style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,100,100,0.8)' }}>INCIDENT SIMULATION</div>
-        </div>
-
-        <button style={{
-            width: '100%',
-            padding: '16px',
-            background: 'rgba(255, 77, 77, 0.2)',
-            border: '2px solid rgba(255, 77, 77, 0.4)',
-            borderRadius: '8px',
-            color: 'white',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            textTransform: 'uppercase',
-            fontSize: '11px',
-            marginBottom: '10px'
-        }}>
-            DETONATE THERMAL EVENT (PACK 02)
-        </button>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-            <button style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,77,77,0.5)', borderRadius: '4px', color: '#ff4d4d', fontSize: '10px' }}>SMOKE CLOUD</button>
-            <button style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,77,77,0.5)', borderRadius: '4px', color: '#ff4d4d', fontSize: '10px' }}>GAS DIFFUSION</button>
-        </div>
-
-        <div style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(100, 200, 255, 0.8)', marginBottom: '10px' }}>HARDWARE COMMANDS</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {['SPRINKLER', 'EXTINGUISH', 'ALARM BUS', 'DOOR GEARS', 'BAT-CUTOFF', 'GLASS-SOL'].map(cmd => (
-                <button key={cmd} style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#ccc', fontSize: '10px' }}>{cmd}</button>
-            ))}
-        </div>
+    <div className="glass-panel">
+      <div className="section-label">SCADA Controls</div>
+      <ValveStatus state={valveState} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {COMMANDS.map(cmd => {
+          const isArmed = armed === cmd.id;
+          const wasSent = sent === cmd.id && armed !== cmd.id;
+          return (
+            <button
+              key={cmd.id}
+              id={`scada-${cmd.id.toLowerCase()}`}
+              className={`cmd-button${isArmed ? ' armed' : ''}`}
+              onClick={() => handleClick(cmd.id)}
+            >
+              <div style={{ flex: 1 }}>
+                <div className="cmd-label">
+                  {isArmed ? `Confirm: ${cmd.label}` : cmd.label}
+                </div>
+                <div className="cmd-desc">
+                  {isArmed ? 'Tap again to execute command' : cmd.desc}
+                </div>
+              </div>
+              {wasSent && (
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--success)', flexShrink: 0 }}>
+                  Sent
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 10, fontSize: 9, color: 'var(--text-tertiary)', fontFamily: 'monospace', letterSpacing: '0.3px' }}>
+        AUTH: vs_secure_197 &middot; Commands encrypted
+      </div>
     </div>
   );
 };

@@ -47,16 +47,14 @@
     </visual>
   </link>
 
-  <!-- MOTORS: Exact Symmetry (X,Y = +/- 0.225m) -->
+  <!-- MOTORS: Exact Symmetry (Hexacopter configuration) -->
   <xacro:macro name="motor" params="name x y index direction">
     <link name="motor_${name}">
-      <!-- Weightless visual anchor -->
       <visual>
         <geometry>
           <mesh filename="package://vectorsense_megacomplex/meshes/motor_attachment.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </visual>
-      <!-- Small placeholder inertial to satisfy some solvers, though visual-only is intended -->
       <inertial>
         <mass value="0.001"/>
         <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
@@ -79,7 +77,7 @@
         <timeConstantUp>0.0125</timeConstantUp>
         <timeConstantDown>0.025</timeConstantDown>
         <maxRotVelocity>1500</maxRotVelocity>
-        <motorConstant>8.54858e-06</motorConstant>
+        <motorConstant>8.54858e-04</motorConstant>
         <momentConstant>0.016</momentConstant>
         <commandSubTopic>command/motor_speed</commandSubTopic>
         <motorNumber>${index}</motorNumber>
@@ -90,10 +88,47 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:motor name="fr" x="0.225" y="-0.225" index="0" direction="ccw"/>
-  <xacro:motor name="fl" x="0.225" y="0.225" index="1" direction="cw"/>
-  <xacro:motor name="br" x="-0.225" y="-0.225" index="2" direction="cw"/>
-  <xacro:motor name="bl" x="-0.225" y="0.225" index="3" direction="ccw"/>
+  <!-- Hexacopter Arms (60 deg separation) -->
+  <xacro:motor name="front_right" x="0.3" y="-0.17" index="0" direction="ccw"/>
+  <xacro:motor name="right" x="0" y="-0.34" index="1" direction="cw"/>
+  <xacro:motor name="back_right" x="-0.3" y="-0.17" index="2" direction="ccw"/>
+  <xacro:motor name="back_left" x="-0.3" y="0.17" index="3" direction="cw"/>
+  <xacro:motor name="left" x="0" y="0.34" index="4" direction="ccw"/>
+  <xacro:motor name="front_left" x="0.3" y="0.17" index="5" direction="cw"/>
+
+  <!-- SENSING PAYLOAD -->
+  <link name="lidar_link">
+    <visual>
+      <geometry><cylinder radius="0.05" length="0.05"/></geometry>
+      <material name="black"><color rgba="0 0 0 1"/></material>
+    </visual>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="lidar_link">
+    <sensor name="gpu_lidar" type="gpu_lidar">
+      <update_rate>10</update_rate>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.2</min>
+          <max>30.0</max>
+        </range>
+      </lidar>
+      <gz_frame_id>lidar_link</gz_frame_id>
+    </sensor>
+  </gazebo>
 
   <gazebo>
     <plugin filename="gz-sim-multicopter-velocity-control-system" name="gz::sim::systems::MulticopterVelocityControl">
@@ -105,9 +140,11 @@
       <maximumAngularVelocity>5.0</maximumAngularVelocity>
     </plugin>
     
-    <!-- State Publisher for Odometry -->
     <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
       <dimensions>3</dimensions>
+    </plugin>
+
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
     </plugin>
   </gazebo>
 

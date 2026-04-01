@@ -29,7 +29,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'cuda_patrol_node = vectorsense_megacomplex.cuda_patrol_node:main',
             'black_swan_demo = vectorsense_megacomplex.black_swan_demo:main',
         ],
     },

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  vectorsense:
+    build: .
+    ports:
+      - "6080:6080"  # noVNC
+      - "8001:8001"  # WebSocket Bridge
+      - "5556:5556"  # Gazebo ZMQ
+      - "5557:5557"  # SCADA ZMQ
+      - "8000:8000"  # Truth Comparator
+      - "5173:5173"  # Dashboard
+    environment:
+      - DISPLAY=:100
+      - GZ_SIM_SYSTEM_PLUGIN_PATH=/workspace/vectorsense_ws/install/vectorsense_gazebo/lib/vectorsense_gazebo
+    volumes:
+      - .:/workspace
+    privileged: true

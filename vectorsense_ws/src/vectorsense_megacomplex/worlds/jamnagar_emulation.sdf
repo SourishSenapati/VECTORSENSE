@@ -4,19 +4,13 @@
     <physics name="1ms" type="ignored">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
-      <dart>
-        <solver>
-          <solver_type>pgs</solver_type>
-          <iters>50</iters>
-        </solver>
-      </dart>
     </physics>
-
-    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics" />
-    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands" />
-    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster" />
-    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact" />
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
 
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
@@ -36,83 +30,118 @@
       <static>true</static>
       <link name="link">
         <collision name="collision">
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>100 100</size>
-            </plane>
-          </geometry>
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
         </collision>
         <visual name="visual">
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>100 100</size>
-            </plane>
-          </geometry>
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
           <material>
-            <ambient>0.2 0.2 0.2 1</ambient>
-            <diffuse>0.2 0.2 0.2 1</diffuse>
-            <specular>0.2 0.2 0.2 1</specular>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
       </link>
     </model>
 
-    <!-- NCI-25 Layered Assets (Verified & Primitives) -->
-    <!-- Distillation Sub-Sector -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/Warehouse</uri>
-      <name>process_control_hub</name>
-      <pose>0 0 0 0 0 0</pose>
-    </include>
-
-    <!-- Synthetic Distillation Column A1 -->
-    <model name="distillation_column_a1">
-      <static>true</static>
-      <pose>10 5 0 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry><cylinder><radius>2.0</radius><length>15.0</length></cylinder></geometry>
-        </collision>
-        <visual name="visual">
-          <geometry><cylinder><radius>2.0</radius><length>15.0</length></cylinder></geometry>
-          <material>
-            <ambient>0.3 0.3 0.35 1</ambient>
-            <diffuse>0.3 0.3 0.35 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
-          </material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- Synthetic Distillation Column B2 -->
+    <!-- EXTENSIVE REFINERY ASSETS: NCI-25 Mega Plant Configuration -->
+    
+    <!-- Central Distillation Column B2 -->
     <model name="distillation_column_b2">
       <static>true</static>
       <pose>15 -8 0 0 0 0</pose>
       <link name="link">
+        <visual name="main_column">
+          <geometry><cylinder><radius>2.5</radius><length>25.0</length></cylinder></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
         <collision name="collision">
-          <geometry><cylinder><radius>1.5</radius><length>10.0</length></cylinder></geometry>
+          <geometry><cylinder><radius>2.5</radius><length>25.0</length></cylinder></geometry>
         </collision>
-        <visual name="visual">
-          <geometry><cylinder><radius>1.5</radius><length>10.0</length></cylinder></geometry>
-          <material>
-            <ambient>0.3 0.3 0.35 1</ambient>
-            <diffuse>0.3 0.3 0.35 1</diffuse>
-          </material>
+
+        <!-- NAVIER-STOKES GAS EMITTER -->
+        <visual name="leak_visual">
+          <pose>2.5 0 12.0 0 0 0</pose>
+          <geometry><sphere><radius>0.2</radius></sphere></geometry>
+          <material><ambient>1 0 0 1</ambient><emissive>1 0 0 1</emissive></material>
+        </visual>
+
+        <particle_emitter name="gas_leak_emitter" type="point">
+          <pose>2.5 0 12.0 0 1.57 0</pose>
+          <spawn_rate>500</spawn_rate>
+          <min_velocity>1.5</min_velocity>
+          <max_velocity>3.5</max_velocity>
+          <lifetime>8.0</lifetime>
+          <size>0.5 0.5 0.5</size>
+          <color>0.7 0.8 0.7 0.4</color>
+          <particle_scatter_ratio>0.6</particle_scatter_ratio>
+        </particle_emitter>
+      </link>
+    </model>
+
+    <!-- Pipe Racks Sector A -->
+    <model name="pipe_rack_alpha">
+      <static>true</static>
+      <pose>5 -15 0 0 0 1.57</pose>
+      <link name="link">
+        <visual name="frame">
+          <geometry><box><size>20 4 8</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+        <!-- Horizontal Pipes -->
+        <visual name="pipe1">
+          <pose>0 1 7 1.57 0 0</pose>
+          <geometry><cylinder><radius>0.4</radius><length>20</length></cylinder></geometry>
+          <material><ambient>0.8 0.2 0.2 1</ambient></material>
+        </visual>
+        <visual name="pipe2">
+          <pose>0 -1 6 1.57 0 0</pose>
+          <geometry><cylinder><radius>0.4</radius><length>20</length></cylinder></geometry>
+          <material><ambient>0.2 0.2 0.8 1</ambient></material>
         </visual>
       </link>
     </model>
 
-    <!-- Pipe Rack Representation -->
-    <model name="pipe_rack_01">
+    <!-- Storage Spheres (LPG Sector) -->
+    <model name="storage_sphere_1">
       <static>true</static>
-      <pose>5 0 5 0 1.57 0</pose>
+      <pose>25 -20 5 0 0 0</pose>
       <link name="link">
-        <visual name="v1">
-          <geometry><cylinder><radius>0.3</radius><length>20.0</length></cylinder></geometry>
-          <material><ambient>0.1 0.1 0.1 1</ambient></material>
+        <visual name="visual">
+          <geometry><sphere><radius>5.0</radius></sphere></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient></material>
         </visual>
+        <collision name="collision">
+          <geometry><sphere><radius>5.0</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="storage_sphere_2">
+      <static>true</static>
+      <pose>35 -20 5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>5.0</radius></sphere></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient></material>
+        </visual>
+        <collision name="collision">
+          <geometry><sphere><radius>5.0</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Pump House -->
+    <model name="pump_house_1">
+      <static>true</static>
+      <pose>-5 -10 2.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>10 10 5</size></box></geometry>
+          <material><ambient>0.5 0.3 0.1 1</ambient></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>10 10 5</size></box></geometry>
+        </collision>
       </link>
     </model>
 

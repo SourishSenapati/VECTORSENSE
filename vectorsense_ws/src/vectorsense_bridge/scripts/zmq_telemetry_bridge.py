@@ -22,9 +22,9 @@ class ZMQTeleremetryBridge(Node):
         # ZeroMQ Logic
         self.context = zmq.Context()
         
-        # DEALER for telemetry upload (Asynchronous Outgoing)
-        self.dealer = self.context.socket(zmq.DEALER)
-        self.dealer.connect("tcp://127.0.0.1:5555")
+        # PUB for telemetry upload (Asynchronous Outgoing)
+        self.dealer = self.context.socket(zmq.PUB)
+        self.dealer.bind("tcp://0.0.0.0:5555")
         
         # SUB for command ingestion
         self.sub = self.context.socket(zmq.SUB)
